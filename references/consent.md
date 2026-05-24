@@ -5,7 +5,7 @@ A hard rule for any agent following the Tribal skills: do not read or write the 
 ## Files requiring consent
 
 - The credentials file Tribal writes during bootstrap. Contains the bearer token. The path is OS-dependent and is named explicitly in the bootstrap output.
-- Harness MCP configuration files. The path varies per harness; consult the corresponding file under `references/harnesses/` for the location.
+- Harness MCP configuration files. The path varies per harness; consult the corresponding file under [`references/harnesses/`](./harnesses/) for the location.
 - Shell configuration files (`.zshrc`, `.bashrc`, `.profile`, `.zshenv`, and equivalents).
 - Environment files (`.env`, `.envrc`, and equivalents). These commonly contain API keys and other secrets.
 

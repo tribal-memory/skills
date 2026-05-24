@@ -22,7 +22,7 @@ Two rules constrain the prose: **no first-person voice** (no "I noticed", no "we
 
 When the user asks for an ingest, the job is to enrich the candidate with available context — not to gatekeep it. Submit without asking for confirmation; Tribal must fade into the background. The ingestion pipeline performs additional tacit extraction downstream of any single ingest call.
 
-**Mandatory pre-read:** load `references/tacit-knowledge.md` before calling the ingest tool for the first time in a session. It is the canonical guide — the four-component pattern in full, worked transformations, the audience rules, the enrichment pattern, and the starter prompts.
+**Mandatory pre-read:** load [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md) before calling the ingest tool for the first time in a session. It is the canonical guide — the four-component pattern in full, worked transformations, the audience rules, the enrichment pattern, and the starter prompts.
 
 <!-- PLACEHOLDER (CHECKPOINT 1 scaffold; remaining sections authored at CHECKPOINT 6).
 
