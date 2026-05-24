@@ -23,12 +23,12 @@ JSON at `mcp_config.json`. Common paths: project-root `mcp_config.json` for proj
 
 For stdio: `command` + `args`, mirroring Gemini CLI's shape.
 
-## Translating from `tribal mcp-config --json`
+## Translating from `tribal mcp-config`
 
 The canonical `url` field maps to Antigravity's `serverUrl` (not `url`, not `httpUrl`). The `headers` block carries through.
 
 ```bash
-tribal mcp-config --json | jq '{serverUrl: .url, headers: .headers}'
+tribal mcp-config | jq '{serverUrl: .url, headers: .headers}'
 ```
 
 Produces the per-server entry the agent merges under the existing `mcpServers` key.

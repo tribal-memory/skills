@@ -6,9 +6,9 @@ The practical companion to `skills/using-tribal/SKILL.md`. The skill body covers
 
 Every ingest is composed of four parts, in this order:
 
-1. **The principle.** The portable claim that ages well — what a reader should walk away with. Phrase as a generalisation that holds outside the original incident, not as an event in time.
-2. **Trigger nod.** Acknowledges what surfaced the principle — optional context a reader might want for auditing provenance. Concise where you can, but do not strip context if clarity suffers. The ingestion pipeline normalises this layer downstream, so prefer including useful framing over producing a sterile principle stripped of its source.
-3. **Symptom space.** Where this principle hides — the shape of the problem it warns about or the situations where it applies.
+1. **The principle.** The portable claim that ages well: what a reader should walk away with. Phrase as a generalisation that holds outside the original incident, not as an event in time.
+2. **Trigger nod.** Acknowledges what surfaced the principle: optional context a reader might want for auditing provenance. Concise where you can, but do not strip context if clarity suffers. The ingestion pipeline normalises this layer downstream, so prefer including useful framing over producing a sterile principle stripped of its source.
+3. **Symptom space.** Where this principle hides: the shape of the problem it warns about or the situations where it applies.
 4. **Applicability frame.** When to reach for this in a new problem. Generalises beyond the original trigger.
 
 The component that does most of the work is the **principle**: it is the load-bearing claim, phrased to read true outside the original incident. The trigger nod is a courtesy that lets a reader audit provenance if needed; it is never the headline.
@@ -21,7 +21,7 @@ The gap between the trigger and the saved principle is the active tacit signal. 
 
 ## Worked transformations
 
-The pairs below show a dry-fact phrasing (✗) next to a tacit reframing (✓) of the same underlying insight. The ✗ and ✓ characters are markup for this reference only — they are not part of the prose to ingest. The ingest content is the text between the quotes.
+The pairs below show a dry-fact phrasing (✗) next to a tacit reframing (✓) of the same underlying insight. The ✗ and ✓ characters are markup for this reference only; they are not part of the prose to ingest. The ingest content is the text between the quotes.
 
 Note also that the ✓ reframings extract only what is supported by the ✗. They do not add new prescriptions (e.g. ordering, sequencing, team-specific conventions) the original did not state. Extraction, not invention.
 
@@ -29,31 +29,31 @@ Note also that the ✓ reframings extract only what is supported by the ✗. The
 
 ✗ "After we debugged the timeout issue in the API gateway on 2026-05-15, I learned we need to set `tcp_keepalive` on long-lived connections."
 
-✓ "Long-lived connections through corporate proxies silently drop without `tcp_keepalive` set; the failure mode is opaque (timeouts with no clear root cause). Surfaced on a streaming RPC bug, but the principle generalises to any long-running transport over a network with intermediate hops — websockets, long polls, server-sent events, gRPC streams. Check keepalive defaults explicitly when designing such a transport; the silence between client and server is the symptom that hides this class of bug."
+✓ "Long-lived connections through corporate proxies silently drop without `tcp_keepalive` set; the failure mode is opaque (timeouts with no clear root cause). Surfaced on a streaming RPC bug, but the principle generalises to any long-running transport over a network with intermediate hops (websockets, long polls, server-sent events, gRPC streams). Check keepalive defaults explicitly when designing such a transport; the silence between client and server is the symptom that hides this class of bug."
 
 ### Database migration ordering
 
 ✗ "We had a bad migration last week that dropped a column before the deploy went out, so the rollback failed."
 
-✓ "Schema changes that remove or rename existing columns must ship in two deploys: first the code paths that no longer depend on the column, then the migration that removes it. One-deploy column removals make rollback impossible because the previous binary cannot recover a column it still references. Applies to any irreversible schema change — drops, renames, type narrowings — whenever there is a chance the prior binary will be redeployed."
+✓ "Schema changes that remove or rename existing columns must ship in two deploys: first the code paths that no longer depend on the column, then the migration that removes it. One-deploy column removals make rollback impossible because the previous binary cannot recover a column it still references. Applies to any irreversible schema change (drops, renames, type narrowings) whenever there is a chance the prior binary will be redeployed."
 
 ### Build cache invalidation
 
 ✗ "Our CI cache was poisoned by a stale lockfile and we lost two hours rebuilding it."
 
-✓ "Build caches keyed only on a dependency-manifest hash will silently serve stale outputs when an upstream registry serves a different artefact for the same version string. Add the resolved-artefact hash (lockfile content hash, not declaration hash) to the cache key, or the cache becomes a correctness hazard rather than a speed-up. Applies wherever a build cache is keyed on declared dependencies rather than resolved ones — most package managers default to declaration-only keys."
+✓ "Build caches keyed only on a dependency-manifest hash will silently serve stale outputs when an upstream registry serves a different artefact for the same version string. Add the resolved-artefact hash (lockfile content hash, not declaration hash) to the cache key, or the cache becomes a correctness hazard rather than a speed-up. Applies wherever a build cache is keyed on declared dependencies rather than resolved ones; most package managers default to declaration-only keys."
 
 ### Review process (interpersonal)
 
 ✗ "Priya flagged that we should stop bundling nits with architectural feedback because it confused junior reviewers."
 
-✓ "Nits and architectural feedback compete for the same review-attention budget when bundled in a single thread; the architectural feedback tends to be answered with the nit-handling reflex (small, mechanical changes) rather than the architectural reflex (a re-think). Surfaced via junior reviewer confusion, but the dynamic applies whenever both classes of feedback share a thread. Applies any time a reviewer has both kinds of feedback on the same change; separating the channels preserves the attention budget for each."
+✓ "Nits and architectural feedback compete for the same review-attention budget when bundled in a single thread; the architectural feedback tends to be answered with the nit-handling reflex (small, mechanical changes) rather than the architectural reflex (a re-think). Surfaced via junior reviewer confusion, but the dynamic applies whenever both classes of feedback share a thread; separating the channels preserves the attention budget for each."
 
-Notice the pattern: each ✓ leads with the principle and demotes the originating incident — the date, the person who hit it, the time wasted — to context the reader can skip. The aim is a principle that reads true to a stranger six months from now, with provenance accessible but never the headline.
+Notice the pattern: each ✓ leads with the principle and demotes the originating incident (the date, the person who hit it, the time wasted) to context the reader can skip. The aim is a principle that reads true to a stranger six months from now, with provenance accessible but never the headline.
 
 ## Audience and attribution
 
-Ingested content addresses a **future, unknown audience** — an agent or person with no memory of who ingested it, when, or under what circumstances. Phrase accordingly.
+Ingested content addresses a **future, unknown audience**: an agent or person with no memory of who ingested it, when, or under what circumstances. Phrase accordingly.
 
 Rules:
 
@@ -83,9 +83,9 @@ If the user asks what to ingest first, offer this menu. It is not prescriptive �
 
 - **Why we chose X over Y.** The rationale behind a load-bearing design decision, phrased as a portable principle a future reader can apply to a different choice. Include the alternative that was rejected and why — the rejection is often where the tacit layer lives.
 - **The alternative you almost picked.** The path not taken, and the constraint or insight that ruled it out. The rejection itself is the principle.
-- **The constraint that wasn't written down.** A bound on the design that nobody documented because it was obvious to everyone in the room — and isn't, six months later.
+- **The constraint that wasn't written down.** A bound on the design that nobody documented because it was obvious to everyone in the room, and isn't, six months later.
 - **The breakthrough that closed the bug.** A recent "oh, this whole class of problems looks like that" moment, articulated with its symptom space and applicability frame.
 - **The decision the team keeps re-litigating.** A topic that comes back repeatedly with the same conclusion; capture the principle so future cycles stop re-deriving it.
 - **The heuristic that became second nature.** A rule of thumb that someone applies without thinking; surface it so a teammate without the same instincts can apply it deliberately.
 - **The thing only one teammate knows.** Bus-factor knowledge converted into a portable principle, stripped of the teammate's name.
-- **What a new hire would struggle to learn from code, docs, and tickets alone.** Onboarding-shaped tacit knowledge — the kind that makes the artefacts make sense.
+- **What a new hire would struggle to learn from code, docs, and tickets alone.** Onboarding-shaped tacit knowledge: the kind that makes the artefacts make sense.

@@ -48,12 +48,12 @@ Per-server entry shape mirrors `tribal mcp-config --json` directly. For HTTP:
 
 For stdio: `command`, `args`, `env`.
 
-## Translating from `tribal mcp-config --json`
+## Translating from `tribal mcp-config`
 
 The canonical shape is accepted directly by `claude mcp add-json`. For manual merging into `~/.claude.json`:
 
 ```bash
-tribal mcp-config --json | jq '{tribal: .}'
+tribal mcp-config | jq '{tribal: .}'
 ```
 
 Produces the per-server entry the agent merges under the existing `mcpServers` key.

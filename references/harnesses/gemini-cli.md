@@ -7,9 +7,13 @@ Primary documentation: [github.com/google-gemini/gemini-cli/blob/main/docs/tools
 For HTTP (Streamable HTTP):
 
 ```bash
-gemini mcp add --transport http tribal http://127.0.0.1:8725/mcp \
-  --header "Authorization: Bearer <token>"
+snippet=$(tribal mcp-config)
+gemini mcp add --transport http tribal \
+  "$(echo "$snippet" | jq -r '.url')" \
+  --header "Authorization: $(echo "$snippet" | jq -r '.headers.Authorization')"
 ```
+
+The `snippet=$(tribal mcp-config)` line resolves the project against the database once and caches the JSON output in the shell; both `jq` reads then operate on the cached snippet rather than invoking the binary twice.
 
 For stdio:
 
@@ -36,12 +40,12 @@ JSON at `~/.gemini/settings.json` (user scope) or `.gemini/settings.json` (proje
 
 For stdio: `command`, `args`, `env`. For SSE specifically, use `url` instead of `httpUrl`.
 
-## Translating from `tribal mcp-config --json`
+## Translating from `tribal mcp-config`
 
 The canonical `url` field maps to Gemini's `httpUrl` (not `url`) for Streamable HTTP. The `headers` block carries through directly.
 
 ```bash
-tribal mcp-config --json | jq '{httpUrl: .url, headers: .headers}'
+tribal mcp-config | jq '{httpUrl: .url, headers: .headers}'
 ```
 
 Produces the per-server entry the agent merges under the existing `mcpServers` key.

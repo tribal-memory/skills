@@ -7,15 +7,16 @@ Primary documentation: [developers.openai.com/codex/mcp](https://developers.open
 For HTTP (Streamable HTTP):
 
 ```bash
-codex mcp add tribal --url http://127.0.0.1:8725/mcp \
+codex mcp add tribal \
+  --url "$(tribal mcp-config | jq -r '.url')" \
   --bearer-token-env-var TRIBAL_AUTH_TOKEN
 ```
 
-For stdio, pass the full Tribal invocation (command + args) after `--`. The canonical command and args come from `tribal mcp-config --json`:
+For stdio, pass the full Tribal invocation (command + args) after `--`. The canonical command and args come from `tribal mcp-config`:
 
 ```bash
 # Inspect what the stdio invocation should look like
-tribal mcp-config --json
+tribal mcp-config
 # Example output (paths and IDs vary):
 # {
 #   "type": "stdio",
@@ -49,16 +50,16 @@ args = ["--config", "<config-path>", "serve", "--project", "<project-id>"]
 
 `env_vars` (list of env-var names) is supported for stdio entries that need values passed through to the subprocess.
 
-## Translating from `tribal mcp-config --json`
+## Translating from `tribal mcp-config`
 
 Codex uses TOML; the canonical JSON does not pipe directly. Extract the fields the agent needs:
 
 ```bash
 # HTTP URL
-tribal mcp-config --json | jq -r '.url'
+tribal mcp-config | jq -r '.url'
 
 # Stdio command and args
-tribal mcp-config --json | jq -r '.command, (.args | tojson)'
+tribal mcp-config | jq -r '.command, (.args | tojson)'
 ```
 
 Then construct the TOML block. For HTTP, set `bearer_token_env_var = "TRIBAL_AUTH_TOKEN"` (or whichever env var the user has exported the bearer token to). Codex builds the `Authorization: Bearer <token>` header at runtime from the named env var.

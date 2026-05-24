@@ -18,9 +18,9 @@ Emits a single JSON object describing everything bootstrap did. Run bootstrap on
 - `mcp_config`: the embedded MCP config snippet. Identical to what `tribal mcp-config --json` would emit for the same transport. Shape varies by transport (see next section).
 - `config_path`: the absolute path to the resolved configuration file.
 
-## `tribal mcp-config --json`
+## `tribal mcp-config`
 
-Emits only the MCP config snippet (the `mcp_config` sub-object of bootstrap). Use this for re-emitting the snippet without re-running bootstrap.
+Emits only the MCP config snippet (the `mcp_config` sub-object of bootstrap). Use this for re-emitting the snippet without re-running bootstrap. The command always writes JSON to stdout; there is no `--json` flag.
 
 The shape depends on the `type` discriminator:
 
@@ -46,11 +46,11 @@ tribal bootstrap --json | jq '.mcp_config'
 Extract the URL from an HTTP transport snippet:
 
 ```bash
-tribal mcp-config --json | jq -r '.url'
+tribal mcp-config | jq -r '.url'
 ```
 
 Extract the Authorization header value:
 
 ```bash
-tribal mcp-config --json | jq -r '.headers.Authorization'
+tribal mcp-config | jq -r '.headers.Authorization'
 ```

@@ -1,6 +1,6 @@
 ---
 name: installing-tribal
-description: Proactively use this skill when the user mentions installing, setting up, wiring, or configuring Tribal (a memory store for tacit engineering knowledge — the why, ways of working, breakthroughs). Also activates when `tribal check` reports failures the user wants to resolve, when switching transports, when re-wiring after a harness change, or when the user asks how to get started with Tribal. Walks through binary install, `tribal bootstrap`, `tribal check`, and MCP config wire-up.
+description: Proactively use this skill when the user mentions installing, setting up, wiring, or configuring Tribal (a memory store for tacit engineering knowledge, the why, ways of working, breakthroughs). Also activates when `tribal check` reports failures the user wants to resolve, when switching transports, when re-wiring after a harness change, or when the user asks how to get started with Tribal. Walks through binary install, `tribal bootstrap`, `tribal check`, and MCP config wire-up.
 license: CC-BY-4.0
 user-invocable: true
 allowed-tools: Bash
@@ -129,7 +129,7 @@ For programmatic consumption, use `--json`. The shape and the walkthrough patter
 tribal check --json
 ```
 
-### When `tribal check` reports healthy but something is still wrong
+### When `tribal check` reports `ok: true` but something is still wrong
 
 `tribal check` covers the configurable surface. Network-level issues (VPN blocking the database path, firewall rules, DNS flakes) can mean Tribal reports healthy while the user cannot do real work. [`references/failure-modes.md`](../../references/failure-modes.md) covers this disambiguation.
 
@@ -138,20 +138,20 @@ tribal check --json
 Bootstrap's stderr output gives the wire-up command directly for Claude Code (`claude mcp add-json tribal "$(tribal mcp-config)"`). For other harnesses, the same canonical `tribal mcp-config --json` output is the source of truth; the translation to each harness's native shape lives in [`references/harnesses/`](../../references/harnesses/).
 
 ```bash
-tribal mcp-config --json
+tribal mcp-config
 ```
 
-The shape (transport discriminator, stdio vs HTTP fields, where the bearer token lives) is documented in [`references/bootstrap-output.md`](../../references/bootstrap-output.md). The agent should run the command and inspect the live output rather than relying on a memorised shape.
+The command always emits JSON to stdout (no `--json` flag); warnings, if any, go to stderr. The shape (transport discriminator, stdio vs HTTP fields, where the bearer token lives) is documented in [`references/bootstrap-output.md`](../../references/bootstrap-output.md). The agent should run the command and inspect the live output rather than relying on a memorised shape.
 
 ### Per-harness translations
 
-The container around the MCP entry varies per harness: the primary configuration file, its format, the key name, and the wrapper field shape all differ. The translation from Tribal's canonical shape to a given harness's native shape lives in [`references/harnesses/`](../../references/harnesses/). Each file there names the harness, its primary config-file path, the field shape it expects, a `jq` snippet that produces that shape from `tribal mcp-config --json`, and how to verify the harness has loaded the server.
+The container around the MCP entry varies per harness: the primary configuration file, its format, the key name, and the wrapper field shape all differ. The translation from Tribal's canonical shape to a given harness's native shape lives in [`references/harnesses/`](../../references/harnesses/). Each file there names the harness, its primary config-file path, the field shape it expects, a `jq` snippet that produces that shape from `tribal mcp-config`, and how to verify the harness has loaded the server.
 
 To wire Tribal into a specific harness, read the corresponding file under that directory.
 
 ### When there is no reference file for the user's harness
 
-The files in [`references/harnesses/`](../../references/harnesses/) cover the named target harnesses. For any harness without a dedicated file, the canonical `tribal mcp-config --json` output is still the source of truth. Read the harness's own MCP configuration documentation, identify the field shape it expects, and produce the translation with the user. If the wire-up works and the user is willing to contribute it back, the path is a pull request against `samfolo/tribal-skills`.
+The files in [`references/harnesses/`](../../references/harnesses/) cover the named target harnesses. For any harness without a dedicated file, the canonical `tribal mcp-config` output is still the source of truth. Read the harness's own MCP configuration documentation, identify the field shape it expects, and produce the translation with the user. If the wire-up works and the user is willing to contribute it back, the path is a pull request against `samfolo/tribal-skills`.
 
 ### Scope: project by default
 
@@ -206,7 +206,7 @@ The skill body is the entry point; the files below carry the depth.
 
 - [`references/consent.md`](../../references/consent.md): **read first.** The ask-first protocol for credential-bearing files. Applies to every file write this skill might do.
 - [`references/platforms.md`](../../references/platforms.md): read early. Detection one-liner and what varies across macOS Intel, macOS Apple Silicon, and Linux.
-- [`references/bootstrap-output.md`](../../references/bootstrap-output.md): read when parsing `tribal bootstrap --json` or `tribal mcp-config --json` output.
+- [`references/bootstrap-output.md`](../../references/bootstrap-output.md): read when parsing `tribal bootstrap --json` or `tribal mcp-config` output.
 - [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md): read when handling `tribal check` failures, including from `--providers`.
 - [`references/harnesses/`](../../references/harnesses/): read when wiring Tribal into a specific harness. Each file under the directory covers one harness.
 - [`references/failure-modes.md`](../../references/failure-modes.md): read when something fails outside the check suite (worker death, transport errors, VPN blocking the database, prompt I/O).
