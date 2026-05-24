@@ -1,6 +1,6 @@
 ---
 name: using-tribal
-description: Proactively use this skill whenever the user signals — explicitly or implicitly — that they want to save an insight, breakthrough, recurring decision, or hard-won lesson for later. Also activates when the user asks a question whose answer might already live in Tribal ("what did we decide about", "have we hit this before", "is there prior art for"), shares a moment of realisation ("oh, I get it now", "that's the same shape as"), or starts a task where prior tacit knowledge might be relevant. Captures and queries tacit engineering knowledge — the why, ways of working, breakthroughs from debugging. Not for line numbers, function specs, or other dry facts that rot.
+description: Proactively use this skill whenever the user signals (explicitly or implicitly) that they want to save an insight, breakthrough, recurring decision, or hard-won lesson for later. Also activates when the user asks a question whose answer might already live in Tribal ("what did we decide about", "have we hit this before", "is there prior art for"), shares a moment of realisation ("oh, I get it now", "that's the same shape as"), or starts a task where prior tacit knowledge might be relevant. Captures and queries tacit engineering knowledge, the why, ways of working, breakthroughs from debugging. Not for line numbers, function specs, or other dry facts that rot.
 license: CC-BY-4.0
 user-invocable: true
 allowed-tools: Bash
@@ -20,7 +20,7 @@ If both apply (the user just finished bootstrap and immediately wants to ingest)
 
 Tribal stores **tacit, semantic, and procedural knowledge**: the why, the ways of working, and the breakthroughs that surface during real engineering work. The kind of context that walks out the door when a teammate leaves: the design philosophy a team holds at a point in time, the heuristic someone keeps returning to, the moment a debugger realises a whole class of bugs share a symptom.
 
-Tribal is **not** a graph-RAG over a codebase, **not** a vanilla memory store, **not** a journalling tool, and **not** a place for line numbers or function signatures. If a candidate ingest fits one of those frames more naturally, the ingest will likely be weak, but the user is the gate. Enrich the prose and submit; the ingestion pipeline performs its own tacit extraction downstream.
+Tribal is **not** a graph-RAG over a codebase, **not** a vanilla memory store, **not** a journalling tool, and **not** a place for line numbers or function signatures. Candidate ingests that fit one of those frames more naturally tend to be weak, but the user is the gate. Enrich the prose and submit; the ingestion pipeline performs its own tacit extraction downstream.
 
 ## How ingests are phrased (summary)
 
@@ -28,7 +28,7 @@ Every ingest follows a four-component pattern: **principle**, **trigger nod**, *
 
 Two rules constrain the prose: **no first-person voice** (no "I noticed", no "we discovered") and **no named attribution** (no personal names or role-credentialled framings).
 
-When the user asks for an ingest, the job is to enrich the candidate with available context, not to gatekeep it. Submit without asking for confirmation; Tribal must fade into the background. The ingestion pipeline performs additional tacit extraction downstream of any single ingest call.
+When the user asks for an ingest, the job is to enrich the candidate with available context, not to gatekeep it. Submit without asking for confirmation. The ingestion pipeline performs additional tacit extraction downstream of any single ingest call.
 
 **Mandatory pre-read:** load [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md) before calling the ingest tool for the first time in a session. It is the canonical guide: the four-component pattern in full, worked transformations, the audience rules, the enrichment pattern, and the starter prompts.
 
@@ -49,13 +49,13 @@ Implicit triggers (the user signals without naming):
 - A recurring decision or topic the team revisits.
 - A breakthrough during debugging that closes a class of bugs.
 - The user explaining a hard-won lesson conversationally, without explicitly asking it to be saved.
-- The start of a new task where prior context might be relevant. (For the read direction; see the read journeys section below.)
+- The start of a new task where prior context might be relevant. (See Read journeys below.)
 
 When a trigger fires, act on it. Tribal fades into the background; the agent does not interrupt the user's flow with confirmation prompts. Ingests are durable, so enrich the candidate with care before submission (per [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md)).
 
 ## The tool surface
 
-Tribal exposes its operations through the MCP tool protocol. **The canonical source for tool names, inputs, and output schemas is `List Tools` against the running Tribal MCP server.** The harness calls `List Tools` automatically at activation; the agent sees the live shape directly. Do not memorise tool names from this document. Names also carry harness-specific namespace prefixes, so the canonical un-namespaced categories below will look slightly different in the harness's tool list than they appear here.
+Tribal exposes its operations through the MCP tool protocol. **The canonical source for tool names, inputs, and output schemas is `List Tools` against the running Tribal MCP server.** The harness calls `List Tools` automatically at activation; the agent sees the live shape directly. Do not memorise tool names from this document. The labels below are un-namespaced category names; your harness's tool list will surface the same tools with a namespace prefix (e.g. `mcp__tribal__` in Claude Code).
 
 The categories, abstractly:
 
@@ -65,9 +65,9 @@ The categories, abstractly:
 - **Discover** by semantic similarity when answering questions or starting tasks.
 - **Explore** the relation graph from a known item to surface related context the user did not directly ask for.
 - **Get** by ID for full content of a specific item.
-- **Feedback** on retrieval quality after a discover or explore session. Trains the system.
+- **Feedback** records the user's observations about retrieval quality to a local log. It does not influence what future `discover` calls return.
 
-For usage nuance (when to compose these, output interpretation patterns, workflow heuristics), see [`references/mcp-tools.md`](../../references/mcp-tools.md). For canonical tool definitions, consult `List Tools` directly.
+For usage nuance (when to compose these, output interpretation patterns, workflow heuristics), see [`references/mcp-tools.md`](../../references/mcp-tools.md). For canonical tool definitions, look at how your harness surfaces each tool; the schemas come directly from Tribal's MCP `tools/list` response at activation.
 
 ## Read journeys
 
@@ -85,17 +85,42 @@ Composition pattern: `discover` (semantic search over the graph), then `explore`
 
 For output interpretation (item IDs, standing values, reference shapes, traversal direction), see [`references/mcp-tools.md`](../../references/mcp-tools.md).
 
-<!-- PLACEHOLDER (CHECKPOINT 6 — section-by-section authoring continues).
+## The diagnostic primitive
 
-Remaining sections:
+When something looks wrong, the first action is `tribal check --json`. It is the binary's introspection surface and the canonical run-book: every condition the binary can detect classifies itself, and each `warn` or `fail` carries a `remediation` field with the exact next step.
 
-  - The diagnostic primitive ("run `tribal check --json`; surface
-    remediation verbatim"). Pointer to references/tribal-check-remediation.md.
-  - When things go wrong outside `tribal check`. Pointer to
-    references/failure-modes.md. Includes VPN-vs-Tribal-down
-    disambiguation.
-  - Feedback loop — why the feedback tool matters and when to call it.
-  - References index at end (HyperFrames pattern; read-when annotations).
+**Surface the `remediation` verbatim. Never paraphrase, summarise, or invent alternative steps.** The binary owns the copy; the agent's job is to apply it or hand it off.
 
-Cap: ≤500 lines. Target: ~450.
--->
+Agent autonomy applies. Where the remediation is programmatic and touches no sensitive state (running a script, restarting a service, installing a package, applying a migration), perform it without waiting for the user. Hand off to the user when the remediation touches API keys in the environment, credentials files, or shell rc files. Re-run `tribal check --json` after each fix; the check ordering is intentional, and a fix often unblocks downstream checks that were previously skipped.
+
+If `tribal check --json` reports `ok: true` and the user still sees a problem, the issue lives outside the surface the binary can introspect. See the next section.
+
+For the walkthrough pattern in full (envelope shape, autonomy rules, iteration), see [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md).
+
+## When things go wrong outside `tribal check`
+
+Some failure modes live outside the configuration surface the binary can introspect. They surface as MCP calls timing out, errors mid-ingest, or runtime symptoms that look like Tribal is down without any failing check.
+
+The highest-priority disambiguation is **"is this Tribal, or the network in front of it?"**. Corporate VPNs commonly block the path to managed-Postgres providers; the symptom is opaque (MCP tool calls fail or hang), but the binary is fine. Run `tribal check --json` first. If the database-reachability check fails, the issue is network-level. If every check passes, the issue is something else again.
+
+For the catalogue of non-check failure modes (worker death, transport errors, prompt I/O failures, git remote detection during bootstrap), see [`references/failure-modes.md`](../../references/failure-modes.md). Each entry names the symptom and the remediation pattern; the agent matches the user's report against the catalogue rather than guessing.
+
+## The feedback tool
+
+The feedback tool records observations about retrieval quality into the local Postgres database. The log is private to the user's Tribal instance: nothing is transmitted to Tribal's maintainers, the harness vendor, or anywhere else.
+
+Call it for two reasons:
+
+- **Self-reflection.** After a `discover` or `explore` session, log which items helped and which were off-topic. Over time the log becomes a record of how the graph is serving the user across sessions.
+- **Evidence for issues.** When filing a GitHub issue about retrieval behaviour, the logged entries are concrete examples to attach.
+
+The Tribal engine does not consume the feedback log; calling the tool will not change what `discover` returns next time. Be explicit with the user about this. The name "feedback" can lead them to expect retrieval will improve in response, which it will not.
+
+For the canonical signature, look at how your harness surfaces the feedback tool; the schema comes from Tribal's MCP `tools/list` response.
+
+## References
+
+- [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md): read before calling the ingest tool for the first time in a session. Canonical guide to phrasing ingests (four-component pattern, worked transformations, audience rules).
+- [`references/mcp-tools.md`](../../references/mcp-tools.md): read for usage nuance, workflow composition, and output interpretation patterns. Tool definitions remain canonical against `List Tools`.
+- [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md): read when running `tribal check --json` and walking the user through remediation.
+- [`references/failure-modes.md`](../../references/failure-modes.md): read when the user reports a problem and `tribal check` reports `ok: true`.
