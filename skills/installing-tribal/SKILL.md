@@ -113,10 +113,35 @@ For the Docker Compose path, the container already runs `tribal serve` as its en
 
 Re-running `tribal bootstrap` against the same git repository is safe. It reuses the existing project, mints a fresh bearer token, and re-emits the MCP config. Useful when the user wants new credentials, a different transport, or a clean MCP config snippet.
 
+## Step 3: Run `tribal check`
+
+`tribal check` is the canonical diagnostic. It surfaces every configurable failure Tribal can detect, with a `remediation` field that names the next action in plain prose.
+
+```bash
+tribal check
+```
+
+For programmatic consumption, use `--json`. The shape and the walkthrough pattern (act on programmatic remediations, hand off on sensitive ones) live in [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md).
+
+```bash
+tribal check --json
+```
+
+### Success state
+
+`ok: true` means the configured surface is healthy: config parses and validates, the database is reachable with the right migrations, project resolution succeeds, the token is valid, the advertised URL responds (for HTTP and SSE), and exactly one `tribal` binary is on PATH.
+
+### Failure state
+
+`ok: false` means at least one check has status `fail`. A `warn` does not flip `ok` to `false` but should still be addressed when the agent has the authority to do so. The remediation handling pattern (programmatic vs sensitive) lives in the reference.
+
+### When `tribal check` reports healthy but something is still wrong
+
+`tribal check` covers the configurable surface. Network-level issues (VPN blocking the database path, firewall rules, DNS flakes) can mean Tribal reports healthy while the user cannot do real work. [`references/failure-modes.md`](../../references/failure-modes.md) covers this disambiguation.
+
 <!-- PLACEHOLDER (CHECKPOINT 5 — section-by-section authoring in progress).
 
 Remaining sections (per plan):
-  5. Step 3 — Run `tribal check`; pointer to [references/tribal-check-remediation.md](../../references/tribal-check-remediation.md).
   6. Step 4 — Wire Tribal into your harness's MCP config (canonical shape +
      pointer to [references/harnesses/<harness>.md](../../references/harnesses/)).
   7. Step 5 — (Optional) `tribal check --providers`.
