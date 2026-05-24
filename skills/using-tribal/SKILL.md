@@ -8,6 +8,14 @@ allowed-tools: Bash
 
 # Using Tribal
 
+## When to use this skill
+
+Use `using-tribal` when Tribal is installed and wired, and the user wants to capture knowledge, query it, traverse the graph, or diagnose an issue.
+
+Use `installing-tribal` instead when Tribal is not yet installed, is being reinstalled, transports are being switched, or the harness's MCP config needs (re-)wiring.
+
+If both apply (the user just finished bootstrap and immediately wants to ingest), `installing-tribal` runs first and hands off to this skill at the end.
+
 ## What Tribal is for
 
 Tribal stores **tacit, semantic, and procedural knowledge** — the why, the ways of working, and the breakthroughs that surface during real engineering work. The kind of context that walks out the door when a teammate leaves: the design philosophy a team holds at a point in time, the heuristic someone keeps returning to, the moment a debugger realises a whole class of bugs share a symptom.
