@@ -159,10 +159,27 @@ Wiring up the harness usually means editing the harness's primary configuration 
 
 Where the harness exposes a CLI for adding MCP servers (a `<harness> mcp add` style command), prefer it. The CLI is the authorisation surface: it edits the config file as part of the user's authorised invocation, with no separate consent step needed. Direct file edits do require consent.
 
+## Step 5: (Optional) Verify provider readiness
+
+`tribal check --providers` extends the diagnostic suite with fatal probes against the embedding and inference providers. Running it is the gate for the user's first real ingest: bootstrap and the standard `tribal check` complete without touching providers, so a healthy install can still fail to do real work until the providers are configured.
+
+```bash
+tribal check --providers
+```
+
+Bootstrap's stderr output prompts this step as part of the numbered next steps. Run it once the user has configured their provider (a local Ollama with the required models pulled, or API keys for a cloud provider set in the environment).
+
+The remediation pattern is the same as for the core check suite: programmatic remediations the agent performs autonomously, sensitive ones (API keys, environment variables) relayed to the user. See [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md).
+
+### Getting API keys to Tribal
+
+If the user has configured a cloud provider, the API key must reach the `tribal` process. The simplest persistent path is to add the key directly to the Tribal config file at the path bootstrap printed (typically `~/.config/tribal/tribal.yaml`); `api_key` is a first-class field on each provider stage. The agent can inspect the current layout with `tribal config show` to identify the right field. Writing the file is a sensitive operation; the consent protocol in [`references/consent.md`](../../references/consent.md) applies, and the user may prefer to edit it themselves.
+
+For one-time verification without persistence, prepending the key to the command works: `OPENAI_API_KEY=<key> tribal check --providers`. Other persistence paths (shell rc, `.env` files, MCP-config env blocks) are valid alternatives the agent can offer based on the user's preference; the YAML config is the recommended default.
+
 <!-- PLACEHOLDER (CHECKPOINT 5 — section-by-section authoring in progress).
 
 Remaining sections (per plan):
-  7. Step 5 — (Optional) `tribal check --providers`.
   8. What can go wrong here (install-only failures).
   9. You're done — handoff to `using-tribal`.
   10. References index at end (HyperFrames pattern; ../../references/* with read-when annotations).
