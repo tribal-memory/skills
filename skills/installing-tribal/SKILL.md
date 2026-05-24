@@ -188,11 +188,19 @@ Install-time failures fall into a small set of patterns, almost all of them with
 
 When in doubt: bootstrap's standard error is the first source of truth; `tribal check` is the next; the failure-modes reference handles the long tail.
 
-<!-- PLACEHOLDER (CHECKPOINT 5 — section-by-section authoring in progress).
+## You're done
 
-Remaining sections (per plan):
-  9. You're done — handoff to `using-tribal`.
-  10. References index at end (HyperFrames pattern; ../../references/* with read-when annotations).
+Configuration is complete. The user's harness now has Tribal wired as an MCP server, and the providers (if configured) are verified.
 
-Cap: ≤500 lines. Target: ~400.
--->
+For day-to-day use, capturing knowledge, querying it, traversing the graph, diagnosing issues — the `using-tribal` skill takes over. It activates whenever the user signals they want to save an insight, recall prior context, or approach a problem where Tribal might already have relevant knowledge.
+
+## References
+
+The skill body is the entry point; the files below carry the depth.
+
+- [`references/consent.md`](../../references/consent.md) — **read first.** The ask-first protocol for credential-bearing files. Applies to every file write this skill might do.
+- [`references/platforms.md`](../../references/platforms.md) — read early. Detection one-liner and what varies across macOS Intel, macOS Apple Silicon, and Linux.
+- [`references/bootstrap-output.md`](../../references/bootstrap-output.md) — read when parsing `tribal bootstrap --json` or `tribal mcp-config --json` output.
+- [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md) — read when handling `tribal check` failures, including from `--providers`.
+- [`references/harnesses/`](../../references/harnesses/) — read when wiring Tribal into a specific harness. Each file under the directory covers one harness.
+- [`references/failure-modes.md`](../../references/failure-modes.md) — read when something fails outside the check suite: worker death, transport errors, VPN blocking the database, prompt I/O.
