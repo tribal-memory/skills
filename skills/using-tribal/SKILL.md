@@ -53,54 +53,47 @@ Implicit triggers (the user signals without naming):
 
 When a trigger fires, act on it. Tribal fades into the background; the agent does not interrupt the user's flow with confirmation prompts. Ingests are durable, so enrich the candidate with care before submission (per [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md)).
 
-<!-- PLACEHOLDER (CHECKPOINT 1 scaffold; remaining sections authored at CHECKPOINT 6).
+## The tool surface
 
-Remaining sections (per plan):
+Tribal exposes its operations through the MCP tool protocol. The harness already knows the live tool list: it called `List Tools` against Tribal's MCP server at activation. Look at the tool list the harness surfaces; do not memorise tool names from this document. Names carry harness-specific namespace prefixes, so the canonical un-namespaced categories below will look slightly different in your harness's tool list.
 
-  - When to use this skill (disambiguation vs `installing-tribal`).
+The shape, by category:
 
-  - Triggers — when to invoke this skill mid-conversation.
-    Explicit triggers: "save this for later", "remember this", "keep this
-    in mind", "what did we decide about X", "have we hit this before".
-    Implicit triggers: moments of realisation, recurring decisions,
-    breakthroughs, the start of a new task where prior tacit knowledge
-    might apply, the user explaining a hard-won lesson conversationally
-    without explicitly asking it to be saved.
+- **Set the session context** once at activation: project, optionally model preference. Applies to subsequent calls.
+- **Ingest** asynchronously when a trigger fires. Returns a job ID; work happens in a background pipeline.
+- **Poll job status** until ingest completes or fails. Useful when the user needs confirmation.
+- **Discover** by semantic similarity when answering questions or starting tasks.
+- **Explore** the relation graph from a known item to surface related context the user did not directly ask for.
+- **Get** by ID for full content of a specific item.
+- **Feedback** on retrieval quality after a discover or explore session. Trains the system.
 
-  - The tool surface — describe canonical workflow shape WITHOUT enumerating
-    tool names. Tell the agent to call its harness's "List Tools" surface
-    against the Tribal MCP server. Pointer to `references/mcp-tools.md`.
+For per-tool detail (purpose, inputs, output interpretation), read [`references/mcp-tools.md`](../../references/mcp-tools.md).
 
-  - Read journeys (LOAD-BEARING — flagged at CHECKPOINT 2):
-    Querying Tribal at the START of a task or problem-solving session is
-    first-class operational guidance, not an afterthought. The agent should
-    proactively use the discover / explore / get-item composition to surface
-    prior tacit context before tackling a new problem.
+## Read journeys
 
-    Reasons to read proactively (beyond direct session context):
-      (a) the harness's context window becomes aware of what nodes exist
-          in the graph, which informs better future ingests (more
-          appropriate references, better-connected items);
-      (b) the agent surfaces prior work that might frame the current
-          problem differently than the user initially posed it;
-      (c) repeated read-then-ingest cycles compound — the more the graph
-          is traversed during work, the more the agent learns to
-          recognise patterns worth capturing.
+Querying Tribal at the start of a task or problem-solving session is first-class operational guidance, not an afterthought. The agent should proactively use the read tools to surface prior tacit context before tackling a new problem.
 
-    Compose discover (semantic search) → explore (relation traversal from
-    a known item) → get-item (fetch by ID) to navigate the graph. How to
-    interpret outputs — item IDs, standing, references, traversal
-    direction — is covered in `references/mcp-tools.md`.
+Reasons to read proactively, beyond direct session context:
 
-  - The diagnostic primitive — "run `tribal check --json`; surface
-    remediation verbatim". Pointer to `references/tribal-check-remediation.md`.
+- The harness's context window becomes aware of what items exist in the graph, which informs better future ingests (more appropriate references, better-connected items).
+- The agent surfaces prior work that might frame the current problem differently than the user initially posed it.
+- Repeated read-then-ingest cycles compound: the more the graph is traversed during work, the more the agent learns to recognise patterns worth capturing.
 
-  - When things go wrong outside `tribal check` — pointer to
-    `references/failure-modes.md`. Includes VPN-vs-Tribal-down
+Composition pattern: `discover` (semantic search over the graph), then `explore` (traverse the relation graph from a known item), then `get` (fetch full content by ID). Most read journeys start with a `discover` against the task description or a recent user message; results then drive an `explore` or two from the most relevant items, with `get` reserved for items the agent wants the full text of.
+
+For output interpretation (item IDs, standing values, reference shapes, traversal direction), see [`references/mcp-tools.md`](../../references/mcp-tools.md).
+
+<!-- PLACEHOLDER (CHECKPOINT 6 — section-by-section authoring continues).
+
+Remaining sections:
+
+  - The diagnostic primitive ("run `tribal check --json`; surface
+    remediation verbatim"). Pointer to references/tribal-check-remediation.md.
+  - When things go wrong outside `tribal check`. Pointer to
+    references/failure-modes.md. Includes VPN-vs-Tribal-down
     disambiguation.
-
-  - Feedback loop — why the feedback tool (or its harness-namespaced
-    equivalent) matters and when to call it.
+  - Feedback loop — why the feedback tool matters and when to call it.
+  - References index at end (HyperFrames pattern; read-when annotations).
 
 Cap: ≤500 lines. Target: ~450.
 -->
