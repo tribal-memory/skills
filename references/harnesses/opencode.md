@@ -1,12 +1,53 @@
-<!-- PLACEHOLDER (CHECKPOINT 1 scaffold): authored at CHECKPOINT 5.
+# OpenCode
 
-OpenCode wire-up:
-  - Primary doc URL + `fetched: <date>` (verify against https://opencode.ai/docs/mcp
-    at the time of authoring).
-  - Native config shape (`mcp.<name>` with `type: "remote"` or `type: "local"`).
-  - jq translation from canonical `tribal mcp-config --json` output → the OpenCode shape.
-  - Wire-up one-liner.
-  - Ask-first consent reminder → references/consent.md.
+Primary documentation: [opencode.ai/docs/mcp-servers/](https://opencode.ai/docs/mcp-servers/) (fetched 2026-05-24).
 
-Target: ~60 lines.
--->
+## Wire-up command
+
+No dedicated `opencode mcp add` subcommand exists. Configuration is via file edit.
+
+## Manual config (file edit)
+
+JSON (JSONC accepted) at `opencode.json` (project scope) or `~/.config/opencode/opencode.json` (user scope). Per-server entry under `mcp.<name>`:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "tribal": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8725/mcp",
+      "enabled": true,
+      "headers": { "Authorization": "Bearer {env:TRIBAL_AUTH_TOKEN}" }
+    }
+  }
+}
+```
+
+`type: "remote"` is the HTTP form. `type: "local"` is the stdio form with `command` + `args`. Env-var interpolation uses `"{env:VAR_NAME}"` syntax.
+
+Editing this file requires consent per [`consent.md`](../consent.md).
+
+## Translating from `tribal mcp-config --json`
+
+The canonical `url` field maps directly. The `headers` block carries through; OpenCode's `{env:VAR}` interpolation can substitute the bearer token from an env var rather than hard-coding it.
+
+```bash
+tribal mcp-config --json | jq '{type: "remote", url: .url, headers: .headers, enabled: true}'
+```
+
+Produces the per-server entry the agent merges under the existing `mcp` key.
+
+## Verification
+
+```bash
+opencode mcp list
+opencode mcp auth list
+opencode mcp debug tribal
+```
+
+## Quirks
+
+- OpenCode handles OAuth automatically for remote MCP servers via Dynamic Client Registration (RFC 7591). To disable per-server: `"oauth": false`.
+- Persistent OAuth tokens live at `~/.local/share/opencode/mcp-auth.json`.
+- The `{env:VAR}` interpolation works in `headers` and OAuth credentials. Useful for keeping bearer tokens out of the config file itself.

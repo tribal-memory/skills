@@ -1,35 +1,45 @@
-<!-- PLACEHOLDER (CHECKPOINT 1 scaffold): authored at CHECKPOINT 5.
+# Antigravity CLI
 
-Antigravity CLI wire-up.
+Primary documentation: [antigravity.google/docs/mcp](https://antigravity.google/docs/mcp) (fetched 2026-05-24; the primary page is JS-rendered, so the field-shape detail below is corroborated against secondary integration writeups and the Gemini-to-Antigravity migration guide cited at the same URL).
 
-  - Primary doc URLs + `fetched: <date>`:
-      * https://antigravity.google/docs/mcp
-      * https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/
+## Wire-up command
 
-  - Binary: `agy` (verify at authoring time).
+No dedicated `agy mcp add` subcommand is documented at the primary URL as of 2026-05-24. Configuration is via file edit.
 
-  - Config file: ~/.gemini/antigravity-cli/mcp_config.json (CLI form).
-    Desktop editor uses ~/.gemini/antigravity/mcp_config.json. Skill body
-    should describe the CLI form first and note the editor variant only as
-    a brief aside.
+## Manual config (file edit)
 
-  - Workspace config: .agents/mcp_config.json.
+JSON at `mcp_config.json`. Common paths: project-root `mcp_config.json` for project scope, or the editor's *Manage MCP Servers > View raw config* surface for user scope. Per-server entry under `mcpServers`:
 
-  - HTTP transport key: `serverUrl` (NOT `url`). The jq translation must
-    rename `url` → `serverUrl` for Antigravity.
+```json
+{
+  "mcpServers": {
+    "tribal": {
+      "serverUrl": "http://127.0.0.1:8725/mcp",
+      "headers": { "Authorization": "Bearer <token>" }
+    }
+  }
+}
+```
 
-  - jq translation from canonical `tribal mcp-config --json` output →
-    the Antigravity shape.
+For stdio: `command` + `args`, mirroring Gemini CLI's shape.
 
-  - Wire-up one-liner (verify at authoring time; the product docs are the
-    source of truth).
+Editing this file requires consent per [`consent.md`](../consent.md).
 
-  - Ask-first consent reminder → references/consent.md.
+## Translating from `tribal mcp-config --json`
 
-Target: ~70 lines (slightly larger than other harnesses to cover the
-serverUrl divergence and the CLI-vs-editor path split).
+The canonical `url` field maps to Antigravity's `serverUrl` (not `url`, not `httpUrl`). The `headers` block carries through.
 
-(Internal author note, not user-visible: Antigravity is newer than the other
-harnesses; maintain alongside Gemini CLI without positioning one over the
-other in user-visible content.)
--->
+```bash
+tribal mcp-config --json | jq '{serverUrl: .url, headers: .headers}'
+```
+
+Produces the per-server entry the agent merges under the existing `mcpServers` key.
+
+## Verification
+
+The editor's *Manage MCP Servers* panel surfaces registered servers. A CLI `agy mcp list` is not documented as of 2026-05-24.
+
+## Quirks
+
+- The `url` → `serverUrl` rename is the single biggest copy-paste hazard from Gemini CLI configs.
+- Env-var injection and bearer-token handling are not documented at the primary URL as of 2026-05-24; secondary sources indicate `headers` carries `Authorization` directly.
