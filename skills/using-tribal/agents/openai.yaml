@@ -1,3 +1,0 @@
-# PLACEHOLDER (CHECKPOINT 1 scaffold): Codex-only sibling metadata, populated at CHECKPOINT 6
-# after verifying current schema against https://developers.openai.com/codex/skills (fetched: <date>).
-# Minimal fields planned: display_name, icon. Other harnesses ignore this file.
