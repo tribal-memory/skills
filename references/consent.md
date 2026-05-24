@@ -18,6 +18,10 @@ Before each read or write of any of the above:
 3. Proceed only on an affirmative response. A non-response is not consent.
 4. Confirm to the user after the action completes, naming the file again.
 
+## Printing environment values
+
+The same caution applies to printing environment variables that may contain secrets (API keys, bearer tokens, OAuth credentials). Commands like `env`, `printenv`, or `echo $VAR` expose values to the conversation transcript and any logs the harness keeps. Ask the user before running them, the same way you would ask before reading a credentials file.
+
 ## Exception
 
 Running `tribal mcp-config` (or any other Tribal binary command) is not subject to this rule. The binary is itself the authorisation surface: it reads no user state outside its own configured paths, and the user has already authorised invocation by running the agent.

@@ -1,6 +1,6 @@
 # Gemini CLI
 
-Primary documentation: [github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md) (fetched 2026-05-24).
+Primary documentation: [github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md). This reference is a cached snapshot; consult the primary documentation as supplementary context when wiring or troubleshooting.
 
 ## Wire-up command (preferred)
 
@@ -14,8 +14,10 @@ gemini mcp add --transport http tribal http://127.0.0.1:8725/mcp \
 For stdio:
 
 ```bash
-gemini mcp add tribal -- tribal serve
+gemini mcp add tribal -- tribal --config <config-path> serve --project <project-id>
 ```
+
+The canonical stdio command and args come from `tribal mcp-config --json`.
 
 ## Manual config (file edit)
 
@@ -57,5 +59,6 @@ Inside a Gemini CLI session, `/mcp` lists active servers.
 ## Quirks
 
 - Gemini CLI strips env vars matching `*TOKEN*`, `*SECRET*`, `*PASSWORD*`, `*KEY*`, `*AUTH*`, `*CREDENTIAL*` from the base environment by default. To pass any such var to a Tribal stdio subprocess, name it explicitly in the `env` block.
-- Server names cannot contain underscores. Use `tribal`, not `tribal_mcp` or similar.
+- Server names cannot contain underscores. Use `tribal`, not `tribal_mcp`.
 - Env-var expansion in the `env` block uses `$VAR` syntax.
+- If Gemini CLI is already running without a required variable in scope, ask the user to quit, export the variable, and relaunch.

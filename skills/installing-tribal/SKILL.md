@@ -153,6 +153,10 @@ To wire Tribal into a specific harness, read the corresponding file under that d
 
 The files in [`references/harnesses/`](../../references/harnesses/) cover the named target harnesses. For any harness without a dedicated file, the canonical `tribal mcp-config --json` output is still the source of truth. Read the harness's own MCP configuration documentation, identify the field shape it expects, and produce the translation with the user. If the wire-up works and the user is willing to contribute it back, the path is a pull request against `samfolo/tribal-skills`.
 
+### Scope: project by default
+
+Most harnesses support per-project and per-user scope for MCP server entries. The recommended default is project scope: a config file at the repository root rather than in the user's home directory. This keeps each repository's Tribal project ID bound to its own MCP entry, so switching repositories switches Tribal projects automatically. User scope is a valid choice when the user wants Tribal available in repositories that have not been bootstrapped, or when they prefer a single global configuration. The per-harness reference files name the scope flags or file paths.
+
 ### Consent before writing
 
 Wiring up the harness usually means editing the harness's primary configuration file (typically a JSON or TOML at a path under `~/.<harness>/`). Those files are covered by the consent protocol; the agent must ask the user before reading or writing them. See [`references/consent.md`](../../references/consent.md).
@@ -176,6 +180,8 @@ The remediation pattern is the same as for the core check suite: programmatic re
 If the user has configured a cloud provider, the API key must reach the `tribal` process. The simplest persistent path is to add the key directly to the Tribal config file at the path bootstrap printed (typically `~/.config/tribal/tribal.yaml`); `api_key` is a first-class field on each provider stage. The agent can inspect the current layout with `tribal config show` to identify the right field. Writing the file is a sensitive operation; the consent protocol in [`references/consent.md`](../../references/consent.md) applies, and the user may prefer to edit it themselves.
 
 For one-time verification without persistence, prepending the key to the command works: `OPENAI_API_KEY=<key> tribal check --providers`. Other persistence paths (shell rc, `.env` files, MCP-config env blocks) are valid alternatives the agent can offer based on the user's preference; the YAML config is the recommended default.
+
+For env-based paths (shell rc, `.env`, MCP-config env blocks), the harness itself must be relaunched to pick up newly-set environment variables; the agent cannot reload the harness's environment for itself. After the user persists the key, prompt them to quit and restart the harness with the variable in scope. The YAML config does not have this requirement, since Tribal reads the file on every invocation.
 
 ## What can go wrong here
 

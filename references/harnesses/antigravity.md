@@ -1,10 +1,10 @@
 # Antigravity CLI
 
-Primary documentation: [antigravity.google/docs/mcp](https://antigravity.google/docs/mcp) (fetched 2026-05-24; the primary page is JS-rendered, so the field-shape detail below is corroborated against secondary integration writeups and the Gemini-to-Antigravity migration guide cited at the same URL).
+Primary documentation: [antigravity.google/docs/mcp](https://antigravity.google/docs/mcp). The primary page is JS-rendered, so this reference may diverge from the live shape; consult the primary documentation as supplementary context when wiring or troubleshooting.
 
-## Wire-up command
+## Wire-up
 
-No dedicated `agy mcp add` subcommand is documented at the primary URL as of 2026-05-24. Configuration is via file edit.
+No dedicated `mcp add` subcommand is documented. Configuration is via file edit.
 
 ## Manual config (file edit)
 
@@ -37,9 +37,9 @@ Produces the per-server entry the agent merges under the existing `mcpServers` k
 
 ## Verification
 
-The editor's *Manage MCP Servers* panel surfaces registered servers. A CLI `agy mcp list` is not documented as of 2026-05-24.
+The editor's *Manage MCP Servers* panel surfaces registered servers.
 
 ## Quirks
 
 - The `url` → `serverUrl` rename is the single biggest copy-paste hazard from Gemini CLI configs.
-- Env-var injection and bearer-token handling are not documented at the primary URL as of 2026-05-24; secondary sources indicate `headers` carries `Authorization` directly.
+- If Antigravity is already running without a required variable in scope, ask the user to quit, export the variable, and relaunch.

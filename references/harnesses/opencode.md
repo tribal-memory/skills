@@ -1,8 +1,8 @@
 # OpenCode
 
-Primary documentation: [opencode.ai/docs/mcp-servers/](https://opencode.ai/docs/mcp-servers/) (fetched 2026-05-24).
+Primary documentation: [opencode.ai/docs/mcp-servers/](https://opencode.ai/docs/mcp-servers/). This reference is a cached snapshot; consult the primary documentation as supplementary context when wiring or troubleshooting.
 
-## Wire-up command
+## Wire-up
 
 No dedicated `opencode mcp add` subcommand exists. Configuration is via file edit.
 
@@ -51,3 +51,4 @@ opencode mcp debug tribal
 - OpenCode handles OAuth automatically for remote MCP servers via Dynamic Client Registration (RFC 7591). To disable per-server: `"oauth": false`.
 - Persistent OAuth tokens live at `~/.local/share/opencode/mcp-auth.json`.
 - The `{env:VAR}` interpolation works in `headers` and OAuth credentials. Useful for keeping bearer tokens out of the config file itself.
+- If OpenCode is already running without a required variable in scope, ask the user to quit, export the variable, and relaunch.

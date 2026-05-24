@@ -1,6 +1,6 @@
 # Claude Code
 
-Primary documentation: [docs.claude.com/en/docs/claude-code/mcp](https://docs.claude.com/en/docs/claude-code/mcp) (fetched 2026-05-24).
+Primary documentation: [docs.claude.com/en/docs/claude-code/mcp](https://docs.claude.com/en/docs/claude-code/mcp). This reference is a cached snapshot; consult the primary documentation as supplementary context when wiring or troubleshooting.
 
 ## Wire-up command (preferred)
 
