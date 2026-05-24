@@ -36,8 +36,6 @@ JSON at `~/.gemini/settings.json` (user scope) or `.gemini/settings.json` (proje
 
 For stdio: `command`, `args`, `env`. For SSE specifically, use `url` instead of `httpUrl`.
 
-Editing this file requires consent per [`consent.md`](../consent.md).
-
 ## Translating from `tribal mcp-config --json`
 
 The canonical `url` field maps to Gemini's `httpUrl` (not `url`) for Streamable HTTP. The `headers` block carries through directly.

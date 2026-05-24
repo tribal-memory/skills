@@ -49,8 +49,6 @@ args = ["--config", "<config-path>", "serve", "--project", "<project-id>"]
 
 `env_vars` (list of env-var names) is supported for stdio entries that need values passed through to the subprocess.
 
-Editing this file requires consent per [`consent.md`](../consent.md).
-
 ## Translating from `tribal mcp-config --json`
 
 Codex uses TOML; the canonical JSON does not pipe directly. Extract the fields the agent needs:

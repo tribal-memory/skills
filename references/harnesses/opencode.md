@@ -26,8 +26,6 @@ JSON (JSONC accepted) at `opencode.json` (project scope) or `~/.config/opencode/
 
 `type: "remote"` is the HTTP form. `type: "local"` is the stdio form with `command` + `args`. Env-var interpolation uses `"{env:VAR_NAME}"` syntax.
 
-Editing this file requires consent per [`consent.md`](../consent.md).
-
 ## Translating from `tribal mcp-config --json`
 
 The canonical `url` field maps directly. The `headers` block carries through; OpenCode's `{env:VAR}` interpolation can substitute the bearer token from an env var rather than hard-coding it.

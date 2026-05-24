@@ -46,7 +46,7 @@ Per-server entry shape mirrors `tribal mcp-config --json` directly. For HTTP:
 }
 ```
 
-For stdio: `command`, `args`, `env`. Editing these files requires consent per [`consent.md`](../consent.md).
+For stdio: `command`, `args`, `env`.
 
 ## Translating from `tribal mcp-config --json`
 
