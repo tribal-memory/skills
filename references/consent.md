@@ -1,18 +1,28 @@
-<!-- PLACEHOLDER (CHECKPOINT 1 scaffold): authored at CHECKPOINT 4.
+# Ask-first consent for credential-bearing files
 
-The ask-first protocol for credential-bearing files.
+A hard rule for any agent following the Tribal skills: do not read or write the files listed below without explicit per-file user confirmation in the current session.
 
-Hard rule: the agent must NEVER read or write any of the following without explicit,
-per-file user consent in the current session:
-  - credentials.json (XDG_CONFIG_HOME/tribal/credentials.json).
-  - Harness MCP config files (~/.claude.json, ~/.codex/config.toml, ~/.gemini/*,
-    ~/.config/opencode/*).
-  - Shell rc files (.zshrc, .bashrc, .profile, etc.).
+## Files requiring consent
 
-Pattern: "I'd like to add Tribal's MCP config to <path>. May I?" Proceed only on yes.
+- `credentials.json` at `$XDG_CONFIG_HOME/tribal/credentials.json` (defaulting to `~/.config/tribal/credentials.json`). Contains the bearer token.
+- Harness MCP configuration files. The path varies per harness; consult the corresponding file under `references/harnesses/` for the location.
+- Shell configuration files (`.zshrc`, `.bashrc`, `.profile`, `.zshenv`, and equivalents). These commonly contain credentials and environment variables.
 
-Exception: running `tribal mcp-config` itself is fine — the binary is the
-authorisation surface; the command reads no user state.
+## The pattern
 
-Target: ~50 lines.
--->
+Before each read or write of any of the above:
+
+1. State explicitly which file you intend to access and why.
+2. Ask the user for confirmation in plain prose. Example: "I'd like to add Tribal's MCP config to `~/.codex/config.toml`. May I?"
+3. Proceed only on an affirmative response. A non-response is not consent.
+4. Confirm to the user after the action completes, naming the file again.
+
+## Exception
+
+Running `tribal mcp-config` (or any other Tribal binary command) is not subject to this rule. The binary is itself the authorisation surface: it reads no user state outside its own configured paths, and the user has already authorised invocation by running the agent.
+
+The rule applies to file-level reads and writes the agent performs through tool calls, not to command invocations the agent shells out for.
+
+## Why this exists
+
+Credential-bearing files store secrets that should not leave the user's machine. Agents reading them risk transcripting secrets into conversation logs; agents writing them risk overwriting state the user depends on. Per-file consent is friction on purpose: the alternative is silent compromise.
