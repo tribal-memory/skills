@@ -149,6 +149,10 @@ The container around the MCP entry varies per harness: the primary configuration
 
 To wire Tribal into a specific harness, read the corresponding file under that directory.
 
+### When there is no reference file for the user's harness
+
+The files in [`references/harnesses/`](../../references/harnesses/) cover the named target harnesses. For any harness without a dedicated file, the canonical `tribal mcp-config --json` output is still the source of truth. Read the harness's own MCP configuration documentation, identify the field shape it expects, and produce the translation with the user. If the wire-up works and the user is willing to contribute it back, the path is a pull request against `samfolo/tribal-skills`.
+
 ### Consent before writing
 
 Wiring up the harness usually means editing the harness's primary configuration file (typically a JSON or TOML at a path under `~/.<harness>/`). Those files are covered by the consent protocol; the agent must ask the user before reading or writing them. See [`references/consent.md`](../../references/consent.md).
