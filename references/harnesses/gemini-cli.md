@@ -61,4 +61,4 @@ Inside a Gemini CLI session, `/mcp` lists active servers.
 - Gemini CLI strips env vars matching `*TOKEN*`, `*SECRET*`, `*PASSWORD*`, `*KEY*`, `*AUTH*`, `*CREDENTIAL*` from the base environment by default. To pass any such var to a Tribal stdio subprocess, name it explicitly in the `env` block.
 - Server names cannot contain underscores. Use `tribal`, not `tribal_mcp`.
 - Env-var expansion in the `env` block uses `$VAR` syntax.
-- If Gemini CLI is already running without a required variable in scope, ask the user to quit, export the variable, and relaunch.
+- If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.

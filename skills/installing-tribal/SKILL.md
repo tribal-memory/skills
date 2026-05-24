@@ -181,7 +181,7 @@ If the user has configured a cloud provider, the API key must reach the `tribal`
 
 For one-time verification without persistence, prepending the key to the command works: `OPENAI_API_KEY=<key> tribal check --providers`. Other persistence paths (shell rc, `.env` files, MCP-config env blocks) are valid alternatives the agent can offer based on the user's preference; the YAML config is the recommended default.
 
-For env-based paths (shell rc, `.env`, MCP-config env blocks), the harness itself must be relaunched to pick up newly-set environment variables; the agent cannot reload the harness's environment for itself. After the user persists the key, prompt them to quit and restart the harness with the variable in scope. The YAML config does not have this requirement, since Tribal reads the file on every invocation.
+For env-based paths (shell rc, `.env`, MCP-config env blocks), the harness itself must be relaunched to pick up newly-set environment variables; the agent cannot reload the harness's environment for itself. The signal that a relaunch is needed is `tribal check --providers` failing on a provider auth check, not a direct inspection of the environment. After persistence, if the check still fails, prompt the user to quit and restart the harness. The YAML config does not have this requirement, since Tribal reads the file on every invocation.
 
 ## What can go wrong here
 

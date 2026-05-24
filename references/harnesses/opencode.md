@@ -51,4 +51,4 @@ opencode mcp debug tribal
 - OpenCode handles OAuth automatically for remote MCP servers via Dynamic Client Registration (RFC 7591). To disable per-server: `"oauth": false`.
 - Persistent OAuth tokens live at `~/.local/share/opencode/mcp-auth.json`.
 - The `{env:VAR}` interpolation works in `headers` and OAuth credentials. Useful for keeping bearer tokens out of the config file itself.
-- If OpenCode is already running without a required variable in scope, ask the user to quit, export the variable, and relaunch.
+- If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.

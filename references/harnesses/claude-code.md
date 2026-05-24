@@ -73,3 +73,4 @@ Inside a Claude Code session, `/mcp` opens the runtime status panel.
 - `${VAR}` and `${VAR:-default}` env-var expansion works in `command`, `args`, `env`, `url`, `headers`.
 - Server name `workspace` is reserved; do not use it.
 - `CLAUDE_PROJECT_DIR` is injected into the spawned stdio process automatically.
+- If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.

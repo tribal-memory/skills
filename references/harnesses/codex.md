@@ -77,5 +77,5 @@ Inside a Codex TUI session, `/mcp` lists active servers.
 
 ## Quirks
 
-- `bearer_token_env_var` stores the *name* of the env var, not the token itself. The variable must be in the shell's environment at the moment Codex launches. If Codex is already running without the variable in scope, ask the user to quit, export the variable, and relaunch.
+- `bearer_token_env_var` stores the *name* of the env var, not the token itself. The variable must be in the shell's environment at the moment Codex launches. If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.
 - Top-level `mcp_oauth_callback_port` and `mcp_oauth_callback_url` keys override OAuth callback defaults; not relevant for Tribal's static bearer-token setup.
