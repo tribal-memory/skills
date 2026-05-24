@@ -177,10 +177,20 @@ If the user has configured a cloud provider, the API key must reach the `tribal`
 
 For one-time verification without persistence, prepending the key to the command works: `OPENAI_API_KEY=<key> tribal check --providers`. Other persistence paths (shell rc, `.env` files, MCP-config env blocks) are valid alternatives the agent can offer based on the user's preference; the YAML config is the recommended default.
 
+## What can go wrong here
+
+Install-time failures fall into a small set of patterns, almost all of them with structured guidance built into the binary or the reference files:
+
+- **Bootstrap itself fails.** The standard error names the failure inline. Common cases: database unreachable, git remote undetectable (pass `--remote <url>`), credentials write failure (the token is shown inline for manual save).
+- **`tribal --version` returns "command not found"** after install. The installer wrote to a PATH the current shell has not re-read. Covered in Step 1's verification subsection.
+- **`tribal check` fails on first run.** Surface the `remediation` field per the pattern in [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md).
+- **Runtime or network-level issues** (worker death, transport errors, VPN blocking the database, prompt I/O). [`references/failure-modes.md`](../../references/failure-modes.md) covers the patterns.
+
+When in doubt: bootstrap's standard error is the first source of truth; `tribal check` is the next; the failure-modes reference handles the long tail.
+
 <!-- PLACEHOLDER (CHECKPOINT 5 — section-by-section authoring in progress).
 
 Remaining sections (per plan):
-  8. What can go wrong here (install-only failures).
   9. You're done — handoff to `using-tribal`.
   10. References index at end (HyperFrames pattern; ../../references/* with read-when annotations).
 
