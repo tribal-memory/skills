@@ -18,19 +18,40 @@ If both apply (the user just finished bootstrap and immediately wants to ingest)
 
 ## What Tribal is for
 
-Tribal stores **tacit, semantic, and procedural knowledge** — the why, the ways of working, and the breakthroughs that surface during real engineering work. The kind of context that walks out the door when a teammate leaves: the design philosophy a team holds at a point in time, the heuristic someone keeps returning to, the moment a debugger realises a whole class of bugs share a symptom.
+Tribal stores **tacit, semantic, and procedural knowledge**: the why, the ways of working, and the breakthroughs that surface during real engineering work. The kind of context that walks out the door when a teammate leaves: the design philosophy a team holds at a point in time, the heuristic someone keeps returning to, the moment a debugger realises a whole class of bugs share a symptom.
 
-Tribal is **not** a graph-RAG over a codebase, **not** a vanilla memory store, **not** a journalling tool, and **not** a place for line numbers or function signatures. If a candidate ingest fits one of those frames more naturally, the ingest will likely be weak — but the user is the gate. Enrich the prose and submit; the ingestion pipeline performs its own tacit extraction downstream.
+Tribal is **not** a graph-RAG over a codebase, **not** a vanilla memory store, **not** a journalling tool, and **not** a place for line numbers or function signatures. If a candidate ingest fits one of those frames more naturally, the ingest will likely be weak, but the user is the gate. Enrich the prose and submit; the ingestion pipeline performs its own tacit extraction downstream.
 
 ## How ingests are phrased (summary)
 
-Every ingest follows a four-component pattern: **principle**, **trigger nod**, **symptom space**, **applicability frame**. The principle does the work — a portable claim that reads true to a stranger six months later, without the original incident in mind. Each ingest carries one principle, not a bundle.
+Every ingest follows a four-component pattern: **principle**, **trigger nod**, **symptom space**, **applicability frame**. The principle does the work: a portable claim that reads true to a stranger six months later, without the original incident in mind. Each ingest carries one principle, not a bundle.
 
 Two rules constrain the prose: **no first-person voice** (no "I noticed", no "we discovered") and **no named attribution** (no personal names or role-credentialled framings).
 
-When the user asks for an ingest, the job is to enrich the candidate with available context — not to gatekeep it. Submit without asking for confirmation; Tribal must fade into the background. The ingestion pipeline performs additional tacit extraction downstream of any single ingest call.
+When the user asks for an ingest, the job is to enrich the candidate with available context, not to gatekeep it. Submit without asking for confirmation; Tribal must fade into the background. The ingestion pipeline performs additional tacit extraction downstream of any single ingest call.
 
-**Mandatory pre-read:** load [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md) before calling the ingest tool for the first time in a session. It is the canonical guide — the four-component pattern in full, worked transformations, the audience rules, the enrichment pattern, and the starter prompts.
+**Mandatory pre-read:** load [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md) before calling the ingest tool for the first time in a session. It is the canonical guide: the four-component pattern in full, worked transformations, the audience rules, the enrichment pattern, and the starter prompts.
+
+## Triggers
+
+Explicit triggers (the user names the action):
+
+- "save this for later"
+- "remember this"
+- "keep this in mind"
+- "what did we decide about X"
+- "have we hit this before"
+- "is there prior art for"
+
+Implicit triggers (the user signals without naming):
+
+- A moment of realisation ("oh, I get it now", "that's the same shape as", "this is why we...").
+- A recurring decision or topic the team revisits.
+- A breakthrough during debugging that closes a class of bugs.
+- The user explaining a hard-won lesson conversationally, without explicitly asking it to be saved.
+- The start of a new task where prior context might be relevant. (For the read direction; see the read journeys section below.)
+
+When a trigger fires, act on it. Tribal fades into the background; the agent does not interrupt the user's flow with confirmation prompts. If a captured item turns out to be unwanted, the user can remove it later.
 
 <!-- PLACEHOLDER (CHECKPOINT 1 scaffold; remaining sections authored at CHECKPOINT 6).
 
