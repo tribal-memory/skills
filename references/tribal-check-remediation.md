@@ -1,40 +1,31 @@
 # Consuming `tribal check --json`
 
-`tribal check` is the binary's diagnostic surface. The `--json` flag emits a structured form the agent can parse and surface to the user. The remediation strings are owned by the binary; the agent's job is to relay them faithfully, not to rewrite them.
+`tribal check` is the binary's diagnostic surface. The `--json` flag emits a structured form the agent can parse and act on.
 
-## JSON envelope
+## What the JSON contains
 
-```json
-{
-  "ok": false,
-  "checks": [
-    {
-      "status": "pass",
-      "name": "config_parse",
-      "detail": "config loaded from /etc/tribal/config.yaml"
-    },
-    {
-      "status": "fail",
-      "name": "database_reachable",
-      "detail": "database unreachable: connection refused",
-      "remediation": "run `pg_isready` against the configured database URL and verify the host, port, and credentials"
-    }
-  ]
-}
-```
+A top-level object with two fields:
 
-- `ok` is `true` if no check has status `fail`. A `warn` does not flip `ok` to `false`.
-- `status` values: `pass` (check succeeded), `warn` (non-blocking issue), `fail` (blocking issue), `skip` (the check could not run because a prerequisite check failed).
-- `detail` describes the state observed, in plain prose.
-- `remediation` is present only on `warn` and `fail`. Absent on `pass` and `skip`.
+- `ok`: boolean. `true` if no check has status `fail`. A `warn` does not flip `ok` to `false`.
+- `checks`: array of check results. Each result has:
+  - `status`: one of `pass`, `warn`, `fail`, `skip`. (`skip` means a prerequisite check failed, so this one could not run.)
+  - `name`: a short check identifier in snake_case.
+  - `detail`: the state observed, in plain prose.
+  - `remediation`: present only on `warn` and `fail`. Absent on `pass` and `skip`. The exact next step to resolve the issue, in plain prose.
+
+Run `tribal check --json` to see the current set of checks and their statuses; the shape above is stable across releases.
 
 ## Walkthrough pattern
 
-Three steps, applied to every diagnostic request:
+For each diagnostic request:
 
-1. Run `tribal check --json` (add `--providers` if the user is preparing for their first ingest).
-2. For each check with status `warn` or `fail`, surface the `remediation` field to the user verbatim. Do not paraphrase. Do not invent steps. Do not summarise.
-3. After the user applies a fix, re-run `tribal check --json` and confirm the previously-failed check now reports `pass`.
+1. Run `tribal check --json`. Add `--providers` if the user is preparing for their first ingest.
+2. For each check with status `warn` or `fail`, read the `remediation`. Then:
+   - **If the remediation is programmatic and does not touch sensitive state** (running a script, restarting a service, installing a missing package, creating a database, applying a migration), perform it autonomously. Tell the user what you did after the fact.
+   - **If the remediation touches sensitive state** (adding API keys to the environment, editing shell rc files, writing credentials), surface the remediation verbatim and let the user proceed. Do not paraphrase. Do not invent steps. Do not summarise.
+3. After applying or relaying a fix, re-run `tribal check --json` and confirm the previously-failed check now reports `pass`.
+
+The principle: take the work off the user's hands wherever the action is safe to automate; hand off only when secrets or persistent state are in play.
 
 ## Iteration
 
@@ -42,4 +33,4 @@ Apply step 3 once per failed check. The check ordering is intentional: earlier f
 
 ## When `ok` is `true` but something still looks wrong
 
-A `tribal check ok: true` means the configuration surface Tribal can introspect is healthy. If the user still reports problems after that, the issue is most likely runtime or network-level rather than a configuration fault. Consult `references/failure-modes.md` for the non-check patterns, with particular attention to the VPN and connectivity entries.
+A `tribal check ok: true` means the configuration surface Tribal can introspect is healthy. If the user still reports problems after that, the issue is most likely runtime or network-level rather than a configuration fault.

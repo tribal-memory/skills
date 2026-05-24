@@ -4,9 +4,10 @@ A hard rule for any agent following the Tribal skills: do not read or write the 
 
 ## Files requiring consent
 
-- `credentials.json` at `$XDG_CONFIG_HOME/tribal/credentials.json` (defaulting to `~/.config/tribal/credentials.json`). Contains the bearer token.
+- The credentials file Tribal writes during bootstrap. Contains the bearer token. The path is OS-dependent and is named explicitly in the bootstrap output.
 - Harness MCP configuration files. The path varies per harness; consult the corresponding file under `references/harnesses/` for the location.
-- Shell configuration files (`.zshrc`, `.bashrc`, `.profile`, `.zshenv`, and equivalents). These commonly contain credentials and environment variables.
+- Shell configuration files (`.zshrc`, `.bashrc`, `.profile`, `.zshenv`, and equivalents).
+- Environment files (`.env`, `.envrc`, and equivalents). These commonly contain API keys and other secrets.
 
 ## The pattern
 

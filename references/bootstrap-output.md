@@ -1,66 +1,33 @@
 # CLI JSON outputs for binary integration
 
-Reference for the two structured outputs the agent consumes during install and wire-up: `tribal bootstrap --json` and `tribal mcp-config --json`. Both shapes are snapshot-locked in the parent repository's test suite; any change to the schema breaks the snapshot and is caught in CI.
+Reference for the two structured outputs the agent consumes during install and wire-up: `tribal bootstrap --json` and `tribal mcp-config --json`. Both shapes are stable across releases. To see the current shape, run the command and inspect the output; the field reference below describes what each field contains semantically.
 
 ## `tribal bootstrap --json`
 
-Emits a single JSON object describing everything bootstrap did. Use this output to drive scripted wire-ups and to extract per-component credentials for further processing.
-
-### Shape
-
-```json
-{
-  "bearer_token": "tk_...",
-  "principal_key": "principal:local",
-  "principal_id": "prin_00000000-0000-0000-0000-000000000001",
-  "project_id": "proj_00000000-0000-0000-0000-000000000002",
-  "project_name": "widgets",
-  "git_remote": "github.com/acme/widgets",
-  "transport": "stdio",
-  "mcp_config": { },
-  "config_path": "/etc/tribal/tribal.yaml"
-}
-```
+Emits a single JSON object describing everything bootstrap did. Run bootstrap once per repository; capture the output to drive scripted wire-ups and to extract credentials for further processing.
 
 ### Field reference
 
-- `bearer_token`: the freshly-minted bearer used in HTTP and SSE transports. Persisted to `credentials.json` automatically.
+- `bearer_token`: an opaque secret string. Persisted to the credentials file automatically; used as the bearer in HTTP and SSE transport headers.
 - `principal_key`: the principal the token is bound to. Defaults to `principal:local`.
-- `principal_id`: the persisted UUID for the principal record.
-- `project_id`: the UUID of the registered project.
+- `principal_id`: a UUID prefixed with `prin_`.
+- `project_id`: a UUID prefixed with `proj_`.
 - `project_name`: a human-friendly name derived from the git remote path.
 - `git_remote`: the remote URL used for project resolution, in `host/owner/repo` form.
 - `transport`: the transport chosen at bootstrap time. One of `stdio`, `http`, `sse`.
-- `mcp_config`: the embedded MCP config snippet. Identical to what `tribal mcp-config --json` would emit for the same transport. See the next section for its shape.
+- `mcp_config`: the embedded MCP config snippet. Identical to what `tribal mcp-config --json` would emit for the same transport. Shape varies by transport (see next section).
 - `config_path`: the absolute path to the resolved configuration file.
 
 ## `tribal mcp-config --json`
 
 Emits only the MCP config snippet (the `mcp_config` sub-object of bootstrap). Use this for re-emitting the snippet without re-running bootstrap.
 
-### Shape (stdio)
+The shape depends on the `type` discriminator:
 
-```json
-{
-  "type": "stdio",
-  "command": "tribal",
-  "args": ["--config", "/etc/tribal/tribal.yaml", "serve", "--project", "proj_..."]
-}
-```
+- **stdio** carries `type`, `command`, `args`. The agent spawns this subprocess per session.
+- **http** and **sse** carry `type`, `url`, `headers`. The agent connects to a long-running server; the bearer token appears in `headers.Authorization` as a Bearer credential.
 
-### Shape (http or sse)
-
-```json
-{
-  "type": "http",
-  "url": "http://127.0.0.1:8725/mcp",
-  "headers": { "Authorization": "Bearer tk_..." }
-}
-```
-
-### Discriminator
-
-The `type` field is the transport discriminator. For stdio, the shape carries `command` and `args` (the agent spawns this subprocess per session). For http and sse, the shape carries `url` and `headers` (the agent connects to a long-running server). The two shapes are disjoint; no field is shared beyond `type`.
+The two shapes are disjoint: no field is shared beyond `type`.
 
 ## jq snippets
 
@@ -87,5 +54,3 @@ Extract the Authorization header value:
 ```bash
 tribal mcp-config --json | jq -r '.headers.Authorization'
 ```
-
-The shape is stable across releases; downstream consumers can rely on field names and types.
