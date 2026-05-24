@@ -55,9 +55,9 @@ When a trigger fires, act on it. Tribal fades into the background; the agent doe
 
 ## The tool surface
 
-Tribal exposes its operations through the MCP tool protocol. The harness already knows the live tool list: it called `List Tools` against Tribal's MCP server at activation. Look at the tool list the harness surfaces; do not memorise tool names from this document. Names carry harness-specific namespace prefixes, so the canonical un-namespaced categories below will look slightly different in your harness's tool list.
+Tribal exposes its operations through the MCP tool protocol. **The canonical source for tool names, inputs, and output schemas is `List Tools` against the running Tribal MCP server.** The harness calls `List Tools` automatically at activation; the agent sees the live shape directly. Do not memorise tool names from this document. Names also carry harness-specific namespace prefixes, so the canonical un-namespaced categories below will look slightly different in the harness's tool list than they appear here.
 
-The shape, by category:
+The categories, abstractly:
 
 - **Set the session context** once at activation: project, optionally model preference. Applies to subsequent calls.
 - **Ingest** asynchronously when a trigger fires. Returns a job ID; work happens in a background pipeline.
@@ -67,7 +67,7 @@ The shape, by category:
 - **Get** by ID for full content of a specific item.
 - **Feedback** on retrieval quality after a discover or explore session. Trains the system.
 
-For per-tool detail (purpose, inputs, output interpretation), read [`references/mcp-tools.md`](../../references/mcp-tools.md).
+For usage nuance (when to compose these, output interpretation patterns, workflow heuristics), see [`references/mcp-tools.md`](../../references/mcp-tools.md). For canonical tool definitions, consult `List Tools` directly.
 
 ## Read journeys
 
@@ -79,7 +79,9 @@ Reasons to read proactively, beyond direct session context:
 - The agent surfaces prior work that might frame the current problem differently than the user initially posed it.
 - Repeated read-then-ingest cycles compound: the more the graph is traversed during work, the more the agent learns to recognise patterns worth capturing.
 
-Composition pattern: `discover` (semantic search over the graph), then `explore` (traverse the relation graph from a known item), then `get` (fetch full content by ID). Most read journeys start with a `discover` against the task description or a recent user message; results then drive an `explore` or two from the most relevant items, with `get` reserved for items the agent wants the full text of.
+**Use `explore` liberally.** Once a `discover` call surfaces an interesting item, traverse the relation graph around it to understand the context the item sits in. Exploration is not only for the current problem: it builds the agent's internal map of the graph. With that map, the agent recognises when a new question coming up later in the same session might already have prior art, and reaches for Tribal again rather than starting cold. The cumulative effect is that each session leaves the graph richer than it found it, which compounds across future sessions.
+
+Composition pattern: `discover` (semantic search over the graph), then `explore` (traverse the relation graph from a known item, generously), then `get` (fetch full content by ID). Most read journeys start with a `discover` against the task description or a recent user message; results drive several `explore` calls to map the relation neighbourhood, with `get` reserved for items the agent wants the full text of.
 
 For output interpretation (item IDs, standing values, reference shapes, traversal direction), see [`references/mcp-tools.md`](../../references/mcp-tools.md).
 
