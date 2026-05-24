@@ -75,7 +75,9 @@ The binary lives inside the container; the host does not need it on PATH.
 tribal bootstrap
 ```
 
-For a structured record of everything bootstrap did (bearer token, project IDs, MCP config snippet, paths), use `--json`. The shape is documented in [`references/bootstrap-output.md`](../../references/bootstrap-output.md).
+The stderr output enumerates the next steps with concrete commands appropriate to the chosen transport, the install state, and whether credentials were written successfully. Treat it as the canonical run-book. The rest of this skill is the meta-frame around that output: what to configure before running bootstrap, what the trade-offs mean, and what to do when the output cannot anticipate the user's environment.
+
+For scripted consumers, `--json` emits the same data as a structured object on stdout (no next-steps prose). The shape is documented in [`references/bootstrap-output.md`](../../references/bootstrap-output.md).
 
 ```bash
 tribal bootstrap --json
@@ -101,11 +103,11 @@ The `--transport` flag picks the connection shape between the harness and the Tr
 tribal bootstrap --transport http
 ```
 
-### HTTP and SSE require a long-lived server
+### HTTP and SSE: the server lifecycle is the user's
 
-When the chosen transport is HTTP or SSE, the wire-up assumes a `tribal serve` process is running and bound to the project ID bootstrap registered. Bootstrap produces the MCP config for that server; it does not start it. The user is responsible for the server's lifecycle.
+For HTTP or SSE transports, the wire-up assumes a `tribal serve` process is running and bound to the registered project ID. Bootstrap's stderr output gives the exact `tribal serve` invocation to run; it does not start the server itself.
 
-Options include a separate terminal window, a terminal pane (tmux, screen), a backgrounded subprocess, or a service manager (launchd, systemd). The user picks based on their environment.
+How that process runs is for the user to decide. Options include a separate terminal window, a terminal pane (tmux, screen), a backgrounded subprocess, or a service manager (launchd, systemd). The user picks based on their environment.
 
 For the Docker Compose path, the container already runs `tribal serve` as its entrypoint. Nothing additional to manage.
 
@@ -115,7 +117,7 @@ Re-running `tribal bootstrap` against the same git repository is safe. It reuses
 
 ## Step 3: Run `tribal check`
 
-`tribal check` is the canonical diagnostic. It surfaces every configurable failure Tribal can detect, with a `remediation` field that names the next action in plain prose.
+Bootstrap's stderr output directs the user to run `tribal check`. The check command is the canonical diagnostic: it surfaces every configurable failure with a `remediation` field that names the next action.
 
 ```bash
 tribal check
@@ -127,23 +129,35 @@ For programmatic consumption, use `--json`. The shape and the walkthrough patter
 tribal check --json
 ```
 
-### Success state
-
-`ok: true` means the configured surface is healthy: config parses and validates, the database is reachable with the right migrations, project resolution succeeds, the token is valid, the advertised URL responds (for HTTP and SSE), and exactly one `tribal` binary is on PATH.
-
-### Failure state
-
-`ok: false` means at least one check has status `fail`. A `warn` does not flip `ok` to `false` but should still be addressed when the agent has the authority to do so. The remediation handling pattern (programmatic vs sensitive) lives in the reference.
-
 ### When `tribal check` reports healthy but something is still wrong
 
 `tribal check` covers the configurable surface. Network-level issues (VPN blocking the database path, firewall rules, DNS flakes) can mean Tribal reports healthy while the user cannot do real work. [`references/failure-modes.md`](../../references/failure-modes.md) covers this disambiguation.
 
+## Step 4: Wire Tribal into your harness's MCP config
+
+Bootstrap's stderr output gives the wire-up command directly for Claude Code (`claude mcp add-json tribal "$(tribal mcp-config)"`). For other harnesses, the same canonical `tribal mcp-config --json` output is the source of truth; the translation to each harness's native shape lives in [`references/harnesses/`](../../references/harnesses/).
+
+```bash
+tribal mcp-config --json
+```
+
+The shape (transport discriminator, stdio vs HTTP fields, where the bearer token lives) is documented in [`references/bootstrap-output.md`](../../references/bootstrap-output.md). The agent should run the command and inspect the live output rather than relying on a memorised shape.
+
+### Per-harness translations
+
+The container around the MCP entry varies per harness: the primary configuration file, its format, the key name, and the wrapper field shape all differ. The translation from Tribal's canonical shape to a given harness's native shape lives in [`references/harnesses/`](../../references/harnesses/). Each file there names the harness, its primary config-file path, the field shape it expects, a `jq` snippet that produces that shape from `tribal mcp-config --json`, and how to verify the harness has loaded the server.
+
+To wire Tribal into a specific harness, read the corresponding file under that directory.
+
+### Consent before writing
+
+Wiring up the harness usually means editing the harness's primary configuration file (typically a JSON or TOML at a path under `~/.<harness>/`). Those files are covered by the consent protocol; the agent must ask the user before reading or writing them. See [`references/consent.md`](../../references/consent.md).
+
+Where the harness exposes a CLI for adding MCP servers (a `<harness> mcp add` style command), prefer it. The CLI is the authorisation surface: it edits the config file as part of the user's authorised invocation, with no separate consent step needed. Direct file edits do require consent.
+
 <!-- PLACEHOLDER (CHECKPOINT 5 — section-by-section authoring in progress).
 
 Remaining sections (per plan):
-  6. Step 4 — Wire Tribal into your harness's MCP config (canonical shape +
-     pointer to [references/harnesses/<harness>.md](../../references/harnesses/)).
   7. Step 5 — (Optional) `tribal check --providers`.
   8. What can go wrong here (install-only failures).
   9. You're done — handoff to `using-tribal`.
