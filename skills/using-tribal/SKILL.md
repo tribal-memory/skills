@@ -51,7 +51,7 @@ Implicit triggers (the user signals without naming):
 - The user explaining a hard-won lesson conversationally, without explicitly asking it to be saved.
 - The start of a new task where prior context might be relevant. (For the read direction; see the read journeys section below.)
 
-When a trigger fires, act on it. Tribal fades into the background; the agent does not interrupt the user's flow with confirmation prompts. If a captured item turns out to be unwanted, the user can remove it later.
+When a trigger fires, act on it. Tribal fades into the background; the agent does not interrupt the user's flow with confirmation prompts. Ingests are durable, so enrich the candidate with care before submission (per [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md)).
 
 <!-- PLACEHOLDER (CHECKPOINT 1 scaffold; remaining sections authored at CHECKPOINT 6).
 
