@@ -1,41 +1,36 @@
-<!-- PLACEHOLDER (CHECKPOINT 1 scaffold): authored at CHECKPOINT 6.
+# Usage nuance for Tribal's MCP tools
 
-Renamed scope per CHECKPOINT 1 feedback (file may end up as
-`tools-and-workflows.md` at CHECKPOINT 6 — name confirmed during authoring):
+Tool names, input schemas, and output schemas are canonical against `List Tools` against the running Tribal MCP server. The harness will already have them surfaced. This file covers the workflow assembly and the cross-cutting patterns the per-tool schemas do not name directly.
 
-The file does NOT enumerate Tribal's MCP tools by name. Reasons:
-  - Drift surface: if tools are added or removed, the list rots.
-  - Harness namespacing: Claude Code prepends an MCP-server prefix to tool
-    names (e.g. `mcp__tribal__tribal_set_context`); other harnesses may
-    namespace differently. Enumerating without the prefix is wrong; with the
-    prefix is harness-specific.
-  - The MCP server already exposes its tools via the `List Tools` JSON-RPC
-    method. The harness uses it natively at activation time. Re-listing here
-    duplicates and risks contradicting that surface.
+## Workflow assembly
 
-Instead, the file:
+```
+session start  →  set context
+work loop      →  discover → explore (zero or more) → get (as needed)
+                  ingest (async) → poll job status if confirmation needed
+later          →  feedback against a discover/explore session
+```
 
-  1. Tells the agent: "your harness already knows Tribal's tools — it called
-     `List Tools` against the Tribal MCP server at activation. Look at the
-     tool list your harness surfaces; the names below are the canonical
-     un-namespaced forms, but your harness may have prefixed them."
+Set context once after the harness connects: model and provider must be set explicitly (the server cannot infer them); project is resolved automatically from the git remote but can be overridden. Subsequent tool calls inherit these defaults.
 
-  2. Describes the workflow shape that the tools compose into, abstractly:
-       - Set context once per session (project, model).
-       - Ingest asynchronously; receive a job ID.
-       - Poll job status until completion.
-       - Discover by semantic similarity.
-       - Explore the relation graph from a known item.
-       - Get items by ID.
-       - Provide feedback on retrieval quality.
+## Cross-cutting patterns
 
-  3. Per category (set-context / ingest / discover / explore / get / feedback /
-     job-status), describes purpose and behaviour in 3-5 lines. The agent
-     maps category to whatever specific tool name its harness presents.
+- **Trace IDs flow through a retrieval session.** Every `discover` response carries a `trace_id`. Pass it as `session_trace_id` to follow-up `explore` calls; pass it again to `feedback`. Without a `trace_id`, feedback cannot be submitted, so do not fabricate one.
 
-  4. Tool-output interpretation patterns (item IDs, standing, references,
-     traversal direction) — these are stable across versions and harnesses,
-     so they CAN be documented here.
+- **Project filter has three modes.** Omit it to use the session-context project. Pass an ID to scope to that project. **Pass null to search across every project.** The null mode is often the most valuable as the graph matures: relationships between work in different projects only surface when the filter is off.
 
-Target: ~120 lines (down from ~150 in original plan — no enumeration).
--->
+- **Ingest is fire-and-forget by default.** The call returns a `job_id` immediately; the pipeline (extract, triage, relate) runs in the background. Poll job status only when the user explicitly wants confirmation or a downstream operation depends on the item being committed. The status tool supports a blocking mode (capped at 30 seconds) that folds ingest plus poll into a single round-trip for short ingests.
+
+- **Get expands ID references on items.** Standing fields carry IDs (`newest_supporting_id`, `newest_contradicting_id`) without inlining the full content. When the agent wants to see what one of those references actually says, fetch by ID. The same applies to any ID surfaced in a response or carried across sessions.
+
+- **Standing is the reliability signal.** Opt in via `include_standing` on discover, explore, or get. Use it when weighing one item against alternatives: the support count, contradiction count, supporting-evidence diversity, and the IDs of the newest supporters and contradictors all surface there.
+
+- **Feedback is a private local log.** It records observations into the user's own Postgres; nothing is transmitted anywhere. It rates the **session**, not individual items: item-level support and contradiction live in the `supports` and `contradicts` relations laid down at ingest time. Submit feedback when the signal is clear; session-end is a sensible default but not the only valid moment.
+
+## Composition with other MCP servers
+
+Tribal's read tools accept item IDs as inputs. That makes them composable with other MCP servers in the same session: another tool can produce candidate item IDs (for example, a SQL-aware MCP server querying Tribal's Postgres by some structural criterion), and `get` or `explore` continues the journey from there.
+
+## Phrasing
+
+Ingest content is knowledge about work, not the artefacts themselves. The four-component pattern lives in [`tacit-knowledge.md`](./tacit-knowledge.md); load it before the first ingest call of a session.
