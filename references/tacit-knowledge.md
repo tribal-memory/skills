@@ -1,6 +1,6 @@
 # Tacit knowledge for Tribal
 
-The practical companion to `skills/using-tribal/SKILL.md`. The skill body covers what Tribal is for and the anti-patterns to avoid; this file covers how to phrase ingests so the tacit layer is front-loaded, the audience rules that keep ingested knowledge usable years later, and the enrichment pattern the agent applies silently on every ingest. Read in full before calling the ingest tool for the first time in a session.
+The canonical phrasing guide for Tribal ingests. Covers how to phrase ingests so the tacit layer is front-loaded, the audience rules that keep ingested knowledge usable years later, and the enrichment pattern the agent applies silently on every ingest. Read in full before calling the ingest tool for the first time in a session.
 
 ## The four-component phrasing pattern
 
@@ -61,7 +61,7 @@ Rules:
 - **No agent self-reference.** Do not write "the assistant suggested", "the model surfaced". The text is principle-and-evidence, not a transcript.
 - **No named attribution in prose.** Do not write personal names or the active user's name. Programmatic attribution (who created the item) is recorded separately at ingest time and is not part of the prose content.
 
-The attribution rule has two reasons. First, attribution in prose ages poorly — people change roles, leave the team, or shift their views. The principle should outlive the speaker. Second, embedding the speaker's identity in prose creates a credibility-based weighting failure mode: a more senior-titled person's incorrect ingest can take precedence over a junior's correct ingest because the prose carries the seniority signal into discover results. Strip identity from the content; let the principle compete on its merit.
+The attribution rule has two reasons. First, attribution in prose ages poorly: people change roles, leave the team, or shift their views. The principle should outlive the speaker. Second, embedding the speaker's identity in prose creates a credibility-based weighting failure mode: a more senior-titled person's incorrect ingest can take precedence over a junior's correct ingest because the prose carries the seniority signal into discover results. Strip identity from the content; let the principle compete on its merit.
 
 Some classes of content genuinely require attribution to make sense (e.g. "the upstream API contract owner specifies X"). In those cases, attribute to a **role or a contract**, not a person: "the API owner", "the schema contract", "the upstream service". Roles outlive incumbents.
 
@@ -71,17 +71,17 @@ When the user asks to ingest something, the job is to package as much context as
 
 - Take the user's request at face value. They are the gate.
 - From the conversation context, infer the trigger nod, symptom space, and applicability frame around the principle they care about. State what you can; leave what you can't.
-- Submit the ingest without asking for confirmation. Tribal must fade into the background — confirmation prompts break the user's flow and the tool becomes friction rather than infrastructure.
+- Submit the ingest without asking for confirmation. Tribal must fade into the background; confirmation prompts break the user's flow and the tool becomes friction rather than infrastructure.
 - The ingestion pipeline performs additional tacit extraction downstream of any single ingest call; this enrichment is one of multiple processing layers, not the only one.
 - Do not hallucinate. If the conversation does not support a component (e.g. no obvious applicability), state only what is supported and leave the rest. A short, honest ingest is better than a long, invented one.
 
-If the user's request contains two distinct claims, submit two separate ingests — one principle per item.
+If the user's request contains two distinct claims, submit two separate ingests, one principle per item.
 
 ## Starter prompts
 
-If the user asks what to ingest first, offer this menu. It is not prescriptive — pick one or none. Their first ingest is theirs.
+If the user asks what to ingest first, offer this menu. It is not prescriptive; pick one or none. Their first ingest is theirs.
 
-- **Why we chose X over Y.** The rationale behind a load-bearing design decision, phrased as a portable principle a future reader can apply to a different choice. Include the alternative that was rejected and why — the rejection is often where the tacit layer lives.
+- **Why we chose X over Y.** The rationale behind a load-bearing design decision, phrased as a portable principle a future reader can apply to a different choice. Include the alternative that was rejected and why; the rejection is often where the tacit layer lives.
 - **The alternative you almost picked.** The path not taken, and the constraint or insight that ruled it out. The rejection itself is the principle.
 - **The constraint that wasn't written down.** A bound on the design that nobody documented because it was obvious to everyone in the room, and isn't, six months later.
 - **The breakthrough that closed the bug.** A recent "oh, this whole class of problems looks like that" moment, articulated with its symptom space and applicability frame.

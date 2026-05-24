@@ -1,6 +1,6 @@
 # CLI JSON outputs for binary integration
 
-Reference for the two structured outputs the agent consumes during install and wire-up: `tribal bootstrap --json` and `tribal mcp-config --json`. Both shapes are stable across releases. To see the current shape, run the command and inspect the output; the field reference below describes what each field contains semantically.
+Reference for the two structured outputs the agent consumes during install and wire-up: `tribal bootstrap --json` and `tribal mcp-config`. Both shapes are stable across releases. To see the current shape, run the command and inspect the output; the field reference below describes what each field contains semantically.
 
 ## `tribal bootstrap --json`
 
@@ -15,7 +15,7 @@ Emits a single JSON object describing everything bootstrap did. Run bootstrap on
 - `project_name`: a human-friendly name derived from the git remote path.
 - `git_remote`: the remote URL used for project resolution, in `host/owner/repo` form.
 - `transport`: the transport chosen at bootstrap time. One of `stdio`, `http`, `sse`.
-- `mcp_config`: the embedded MCP config snippet. Identical to what `tribal mcp-config --json` would emit for the same transport. Shape varies by transport (see next section).
+- `mcp_config`: the embedded MCP config snippet. Identical to what `tribal mcp-config` would emit for the same transport. Shape varies by transport (see next section).
 - `config_path`: the absolute path to the resolved configuration file.
 
 ## `tribal mcp-config`

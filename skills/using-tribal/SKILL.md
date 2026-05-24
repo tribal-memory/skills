@@ -3,7 +3,7 @@ name: using-tribal
 description: Proactively use this skill whenever the user signals (explicitly or implicitly) that they want to save an insight, breakthrough, recurring decision, or hard-won lesson for later. Also activates when the user asks a question whose answer might already live in Tribal ("what did we decide about", "have we hit this before", "is there prior art for"), shares a moment of realisation ("oh, I get it now", "that's the same shape as"), or starts a task where prior tacit knowledge might be relevant. Captures and queries tacit engineering knowledge, the why, ways of working, breakthroughs from debugging. Not for line numbers, function specs, or other dry facts that rot.
 license: CC-BY-4.0
 user-invocable: true
-allowed-tools: Bash
+allowed-tools: Bash(tribal *), Bash(jq *)
 ---
 
 # Using Tribal

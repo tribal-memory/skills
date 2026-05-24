@@ -22,7 +22,7 @@ Most of the install and bootstrap surface is platform-agnostic. The agent should
 - **Tribal binary.** The binary itself is architecture-aware. Homebrew, the shell installer, and the Docker image all resolve the correct binary for the active architecture without user input.
 - **Postgres with `pgvector`.** Same setup on macOS and Linux. Same on Intel and Apple Silicon.
 - **Docker Compose.** Host architecture is irrelevant for the containerised path. The image is multi-arch and the host-side `docker compose` semantics are identical.
-- **MCP wire-up.** The canonical `tribal mcp-config --json` output is identical across platforms.
+- **MCP wire-up.** The canonical `tribal mcp-config` output is identical across platforms.
 
 ## What does vary
 

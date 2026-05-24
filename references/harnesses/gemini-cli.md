@@ -21,7 +21,7 @@ For stdio:
 gemini mcp add tribal -- tribal --config <config-path> serve --project <project-id>
 ```
 
-The canonical stdio command and args come from `tribal mcp-config --json`.
+The canonical stdio command and args come from `tribal mcp-config`.
 
 ## Manual config (file edit)
 

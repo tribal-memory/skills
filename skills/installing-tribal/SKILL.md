@@ -3,7 +3,7 @@ name: installing-tribal
 description: Proactively use this skill when the user mentions installing, setting up, wiring, or configuring Tribal (a memory store for tacit engineering knowledge, the why, ways of working, breakthroughs). Also activates when `tribal check` reports failures the user wants to resolve, when switching transports, when re-wiring after a harness change, or when the user asks how to get started with Tribal. Walks through binary install, `tribal bootstrap`, `tribal check`, and MCP config wire-up.
 license: CC-BY-4.0
 user-invocable: true
-allowed-tools: Bash
+allowed-tools: Bash(tribal *), Bash(brew *), Bash(curl *), Bash(docker *), Bash(npx skills *), Bash(jq *), Bash(uname *), Bash(claude mcp *), Bash(codex mcp *), Bash(gemini mcp *), Bash(opencode mcp *), Read, Write
 ---
 
 # Installing Tribal
@@ -135,7 +135,7 @@ tribal check --json
 
 ## Step 4: Wire Tribal into your harness's MCP config
 
-Bootstrap's stderr output gives the wire-up command directly for Claude Code (`claude mcp add-json tribal "$(tribal mcp-config)"`). For other harnesses, the same canonical `tribal mcp-config --json` output is the source of truth; the translation to each harness's native shape lives in [`references/harnesses/`](../../references/harnesses/).
+Bootstrap's stderr output gives the wire-up command directly for Claude Code (`claude mcp add-json tribal "$(tribal mcp-config)"`). For other harnesses, the same canonical `tribal mcp-config` output is the source of truth; the translation to each harness's native shape lives in [`references/harnesses/`](../../references/harnesses/).
 
 ```bash
 tribal mcp-config

@@ -32,7 +32,7 @@ JSON at one of:
 - User scope: `~/.claude.json` (server entries under `mcpServers` or `projects.<path>.mcpServers`).
 - Project scope: `.mcp.json` at the repo root.
 
-Per-server entry shape mirrors `tribal mcp-config --json` directly. For HTTP:
+Per-server entry shape mirrors `tribal mcp-config` directly. For HTTP:
 
 ```json
 {
