@@ -39,5 +39,5 @@ The editor's *Manage MCP Servers* panel surfaces registered servers.
 
 ## Quirks
 
-- The `url` → `serverUrl` rename is the single biggest copy-paste hazard from Gemini CLI configs.
+- **Do NOT** use `url` or `httpUrl` in an Antigravity config; both are silently ignored. Antigravity expects `serverUrl`. This is the single biggest copy-paste hazard from canonical `tribal mcp-config` output and from Gemini CLI snippets.
 - If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.
