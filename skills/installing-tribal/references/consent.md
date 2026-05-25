@@ -22,6 +22,8 @@ Before each read or write of any of the above:
 
 The same caution applies to printing environment variables that may contain secrets (API keys, bearer tokens, OAuth credentials). Commands like `env`, `printenv`, or `echo $VAR` expose values to the conversation transcript and any logs the harness keeps. Ask the user before running them, the same way you would ask before reading a credentials file.
 
+This extends to commands whose purpose is not printing secrets but which resolve and emit them as a side effect. **`docker compose config` is the notable trap:** it interpolates the project's `.env` and prints the fully resolved configuration, API keys included, to stdout. Do not run it agentically without consent. To validate a compose file without emitting secrets, use `docker compose config --quiet`, which checks the configuration and returns a non-zero exit on error while printing nothing. The same caution covers `docker inspect` against a running container, which exposes its environment.
+
 ## Exception
 
 Running `tribal mcp-config` (or any other Tribal binary command) is not subject to this rule. The binary is itself the authorisation surface: it reads no user state outside its own configured paths, and the user has already authorised invocation by running the agent.
