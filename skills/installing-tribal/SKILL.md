@@ -24,6 +24,8 @@ Also load [`references/platforms.md`](references/platforms.md). It carries the d
 
 Three install paths. They produce different process lifecycles for Tribal.
 
+**Recommended: install the binary** (Homebrew on macOS, the shell installer on Linux). It is the least to manage: a single binary on PATH, simple to upgrade and to remove, and the harness can spawn it per session with no long-running process to babysit. The Docker Compose path is heavier (a container plus a bundled Postgres, HTTP transport, a long-running stack), and it puts provider configuration and secrets in a compose `.env`; reach for it only when a self-contained, containerised stack is specifically wanted.
+
 ### Homebrew (macOS)
 
 ```bash
@@ -43,11 +45,23 @@ Targets macOS and Linux. Same end state as Homebrew: a single binary on PATH.
 
 ### Docker Compose (containerised)
 
+Runs Tribal as a long-running server in a container, alongside a bundled Postgres. The harness wires to the container over the network. Requires HTTP transport (Step 2 explains why).
+
+The only file the user needs is `docker-compose.yml`; the entrypoint is baked into the published image. The image tag is pinned inside that file, so the compose file and the image must come from the same release. **Take the compose file from the latest release, into a fresh directory.**
+
+**IMPORTANT:** do not reuse an existing local checkout of the Tribal repository without confirming it is current. A stale checkout pins an old image tag in its compose file, and `docker compose up` will silently run that old version. If a checkout is reused, bring it to the latest release tag first (`git fetch --tags`, then check out that tag).
+
+One way to fetch the release compose into a clean directory:
+
 ```bash
-git clone https://github.com/tribal-memory/tribal && cd tribal && docker compose up
+tag=$(curl -fsSL https://api.github.com/repos/tribal-memory/tribal/releases/latest | jq -r .tag_name)
+mkdir tribal-docker && cd tribal-docker
+curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/docker-compose.yml" -o docker-compose.yml
+curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/.env.example" -o .env.example
+docker compose up
 ```
 
-Runs Tribal as a long-running server in a container. The harness wires to the container over the network. Requires HTTP transport (Step 2 explains why).
+The `.env.example` is the template for provider configuration (see [`references/providers.md`](references/providers.md)); the stack runs on a local Ollama without it.
 
 ### Verify the install
 
@@ -111,6 +125,10 @@ How that process runs is for the user to decide. Options include a separate term
 
 For the Docker Compose path, the container already runs `tribal serve` as its entrypoint. Nothing additional to manage.
 
+### Choosing providers and models
+
+By default Tribal uses a local Ollama. To use a cloud provider, or a non-default local model, set the provider and model for the embedding stage and for each inference stage. `tribal bootstrap` accepts these as flags (`--embedding-provider`, `--embedding-model`, and `--inference-<stage>-provider` / `--inference-<stage>-model`); they can equally be set by environment variable or in the config file. The full set of channels, the per-install-path specifics (the Docker Compose path configures providers through `.env`, not the config file), and current model IDs live in [`references/providers.md`](references/providers.md).
+
 ### Re-running bootstrap
 
 Re-running `tribal bootstrap` against the same git repository is safe. It reuses the existing project, mints a fresh bearer token, and re-emits the MCP config. Useful when the user wants new credentials, a different transport, or a clean MCP config snippet.
@@ -128,6 +146,16 @@ For programmatic consumption, use `--json`. The shape and the walkthrough patter
 ```bash
 tribal check --json
 ```
+
+### On the Docker Compose path
+
+Run `tribal check` inside the container, and thread in the project id so the project-resolution check has context:
+
+```bash
+docker compose exec tribal sh -c 'TRIBAL_PROJECT_ID=$(cat /var/lib/tribal/tribal/project_id) tribal check'
+```
+
+Without the project id, the check reports a `project_resolution` warning even when the install is healthy.
 
 ### When `tribal check` reports `ok: true` but something is still wrong
 
@@ -157,6 +185,8 @@ The files in [`references/harnesses/`](references/harnesses/) cover the named ta
 
 Most harnesses support per-project and per-user scope for MCP server entries. The recommended default is project scope: a config file at the repository root rather than in the user's home directory. This keeps each repository's Tribal project ID bound to its own MCP entry, so switching repositories switches Tribal projects automatically. User scope is a valid choice when the user wants Tribal available in repositories that have not been bootstrapped, or when they prefer a single global configuration. The per-harness reference files name the scope flags or file paths.
 
+**IMPORTANT (HTTP and SSE transports):** the MCP entry for HTTP or SSE carries the bearer token in an `Authorization` header. Wiring that entry at project scope places the token in the harness's project-scoped config file, which is commonly tracked in version control. For HTTP or SSE, prefer a scope the harness keeps out of version control (user scope, or a local uncommitted file). Stdio entries carry no token and are unaffected.
+
 ### Consent before writing
 
 Wiring up the harness usually means editing the harness's primary configuration file (typically a JSON or TOML at a path under `~/.<harness>/`). Those files are covered by the consent protocol; the agent must ask the user before reading or writing them. See [`references/consent.md`](references/consent.md).
@@ -177,11 +207,11 @@ The remediation pattern is the same as for the core check suite: programmatic re
 
 ### Getting API keys to Tribal
 
-If the user has configured a cloud provider, the API key must reach the `tribal` process. The simplest persistent path is to add the key directly to the Tribal config file at the path bootstrap printed (typically `~/.config/tribal/tribal.yaml`); `api_key` is a first-class field on each provider stage. The agent can inspect the current layout with `tribal config show` to identify the right field. Writing the file is a sensitive operation; the consent protocol in [`references/consent.md`](references/consent.md) applies, and the user may prefer to edit it themselves.
+If the user has configured a cloud provider, the API key must reach the `tribal` process. The channels, and which applies to each install path, are in [`references/providers.md`](references/providers.md): a directly-installed binary reads it from the config file, a stage-specific `TRIBAL_..._API_KEY`, or the standard `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`; the Docker Compose path takes it from `.env`, since the config file inside the container does not drive provider routing. Writing a config or environment file is sensitive; the consent protocol in [`references/consent.md`](references/consent.md) applies.
 
-For one-time verification without persistence, prepending the key to the command works: `OPENAI_API_KEY=<key> tribal check --providers`. Other persistence paths (shell rc, `.env` files, MCP-config env blocks) are valid alternatives the agent can offer based on the user's preference; the YAML config is the recommended default.
+For a one-time check without persistence, prepend the key: `OPENAI_API_KEY=<key> tribal check --providers`.
 
-For env-based paths (shell rc, `.env`, MCP-config env blocks), the harness itself must be relaunched to pick up newly-set environment variables; the agent cannot reload the harness's environment for itself. The signal that a relaunch is needed is `tribal check --providers` failing on a provider auth check, not a direct inspection of the environment. After persistence, if the check still fails, prompt the user to quit and restart the harness. The YAML config does not have this requirement, since Tribal reads the file on every invocation.
+When the key is supplied through the environment rather than a file Tribal reads on every invocation, the process that consumes it must be (re)started after the value is set: a harness-spawned stdio server needs the harness relaunched; an HTTP server or the Docker stack needs that process restarted. The agent cannot reload another process's environment for itself. The signal that a restart is needed is `tribal check --providers` failing on a provider auth check, not a direct inspection of the environment.
 
 ## What can go wrong here
 
@@ -207,6 +237,7 @@ The skill body is the entry point; the files below carry the depth.
 - [`references/consent.md`](references/consent.md): **read first.** The ask-first protocol for credential-bearing files. Applies to every file write this skill might do.
 - [`references/platforms.md`](references/platforms.md): read early. Detection one-liner and what varies across macOS Intel, macOS Apple Silicon, and Linux.
 - [`references/bootstrap-output.md`](references/bootstrap-output.md): read when parsing `tribal bootstrap --json` or `tribal mcp-config` output.
+- [`references/providers.md`](references/providers.md): read when selecting or configuring embedding or inference providers and models, including cloud-provider setup and current model IDs.
 - [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md): read when handling `tribal check` failures, including from `--providers`.
 - [`references/harnesses/`](references/harnesses/): read when wiring Tribal into a specific harness. Each file under the directory covers one harness.
 - [`references/failure-modes.md`](references/failure-modes.md): read when something fails outside the check suite (worker death, transport errors, VPN blocking the database, prompt I/O).
