@@ -81,6 +81,8 @@ docker compose ps
 
 The binary lives inside the container; the host does not need it on PATH.
 
+If the `tribal` service is not `Up` while Postgres reports healthy, a likely cause is **host port 8725 already in use** by a previous Tribal stack or another process. Identifying what holds it is worth doing before retrying: a stale Tribal stack can be torn down (with the user's agreement) to free the port, while something the user relies on is better flagged than stopped. A free host port is also an option, remembering that the port mapping and `TRIBAL_PUBLIC_MCP_URL` move together.
+
 ## Step 2: Run `tribal bootstrap`
 
 `tribal bootstrap` composes setup, project registration, credential persistence, and MCP config emission into one run. Invoke it from inside the git repository the user wants Tribal to know about; bootstrap registers that repository as the project.
@@ -170,6 +172,16 @@ tribal mcp-config
 ```
 
 The command always emits JSON to stdout (no `--json` flag); warnings, if any, go to stderr. The shape (transport discriminator, stdio vs HTTP fields, where the bearer token lives) is documented in [`references/bootstrap-output.md`](references/bootstrap-output.md). The agent should run the command and inspect the live output rather than relying on a memorised shape.
+
+On the Docker Compose path, thread the project id in, the same as `tribal check`; without it, `tribal mcp-config` returns empty:
+
+```bash
+docker compose exec -T tribal sh -c 'TRIBAL_PROJECT_ID=$(cat /var/lib/tribal/tribal/project_id) tribal mcp-config'
+```
+
+When you only need to confirm the shape rather than wire it, note that the output carries the bearer token in its `Authorization` header; [`references/consent.md`](references/consent.md) covers inspecting it without exposing the value.
+
+Once wired, the harness must load the new server. A full session restart always works; some harnesses can reload MCP servers in-session, which is lighter, and the per-harness reference notes how.
 
 ### Per-harness translations
 

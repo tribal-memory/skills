@@ -50,3 +50,4 @@ opencode mcp debug tribal
 - Persistent OAuth tokens live at `~/.local/share/opencode/mcp-auth.json`.
 - The `{env:VAR}` interpolation works in `headers` and OAuth credentials. Useful for keeping bearer tokens out of the config file itself.
 - If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.
+- OpenCode has no in-session MCP reload; restart the TUI to pick up a newly-wired server.
