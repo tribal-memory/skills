@@ -10,7 +10,7 @@ allowed-tools: Bash(tribal *), Bash(brew *), Bash(curl *), Bash(docker *), Bash(
 
 ## Configuring Tribal
 
-This skill walks through the four steps that configure Tribal: install the binary, run `tribal bootstrap`, run `tribal check`, and wire the MCP config into your harness. An optional fifth step extends the check suite with provider readiness probes before the user's first ingest. Follow the steps in order.
+This skill walks through the five steps that configure Tribal: install the binary, run `tribal bootstrap`, run `tribal check`, wire the MCP config into your harness, and verify provider readiness. The first ingest fails until that last step passes, so it is part of setup, not an optional extra. Follow the steps in order.
 
 If `using-tribal` should activate after configuration is complete, this skill hands off at the end.
 
@@ -60,11 +60,20 @@ curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/.env.exa
 docker compose up
 ```
 
-`docker compose` reads `.env`, not `.env.example`, so copy the template to `.env` and edit that one. With no `.env` (or its defaults), the stack runs on a local Ollama.
+#### Configure `.env` before the first `docker compose up`
 
-**IMPORTANT:** for a cloud provider, set the provider, model, and key in `.env` before that first `docker compose up`. Tribal validates provider config at startup, so a cloud provider without its key fails to boot the container, not just the first ingest.
+`docker compose` reads `.env`, not `.env.example`. The `.env` written here decides which providers Tribal calls, and there is no prompt for it later, so it must be right before the first `docker compose up`. This is the step most easily skipped, and skipping it is why a healthy-looking stack then fails its first ingest.
 
-The example's model values are placeholders, and not every current model works: some are reasoning models Tribal cannot yet drive. Confirm the model against [`references/providers.md`](references/providers.md) rather than uncommenting the example blind.
+**IMPORTANT:** make the provider decision explicitly, in this order, before bringing the stack up:
+
+1. **Decide: local Ollama, or a cloud provider?** With no `.env` (or the shipped defaults), every stage targets a local Ollama at `http://host.docker.internal:11434`. Ollama is **not** part of the compose stack: the default assumes one already running on the host with the required models pulled. If there is no host Ollama, the choice is a cloud provider, or the first ingest fails on an unreachable provider.
+2. **Copy the template:** `cp .env.example .env`. Edit `.env`, never `.env.example`.
+3. **For a cloud provider,** set the provider, model, and base URL for the embedding stage and all three inference stages, plus the API key. Changing a stage's provider without also setting its base URL misroutes that request to the local Ollama address. The shipped `.env.example` carries a ready-to-paste block; the channels and the model IDs that actually work are in [`references/providers.md`](references/providers.md).
+4. **Only then** run `docker compose up`.
+
+A cloud provider missing its key fails to boot the container, because Tribal validates provider config at startup. A cloud provider with an unsupported model boots but fails the first ingest: the `.env.example` model values are placeholders, and not every current model works (some are reasoning models Tribal cannot yet drive, because it sends `max_tokens`, which those reject). Confirm each model against [`references/providers.md`](references/providers.md) rather than uncommenting the example blind.
+
+By default this path registers a generic placeholder project (`tribal-docker-local`, with a placeholder remote), so ingests attach to that rather than the repository the user cares about. To bind Tribal to the real repo, either set `TRIBAL_PROJECT_NAME` and `TRIBAL_PROJECT_REMOTE` in `.env` before the first `docker compose up`, or, after wiring, have the agent run `tribal project register --remote <repo-url>`.
 
 ### Verify the install
 
@@ -186,6 +195,14 @@ When you only need to confirm the shape rather than wire it, note that the outpu
 
 **IMPORTANT:** the newly-wired server does not appear in the current session until the harness loads it; the Tribal MCP tools will be missing until then. Most harnesses need a session restart; some can reload in-session (Claude Code, via `/reload-plugins`). The per-harness reference notes which applies; tell the user as part of the handoff.
 
+### HTTP and SSE: the bearer token has to reach the harness
+
+For HTTP or SSE, the Tribal server authenticates every request with a bearer token. Bootstrap mints that token (inside the container, on the Docker path) and `tribal mcp-config` surfaces it in the entry's `Authorization` header. Wiring the config is only half the job: the harness has to present that token on every call.
+
+Harnesses take the token one of two ways. Some store it inline in the config, as the `Authorization` header value. Others store the *name* of an environment variable to read at launch (Codex's `bearer_token_env_var` is this style), so the variable, not the config, carries the secret.
+
+**IMPORTANT (env-var style):** when a harness reads the token from a named environment variable, that variable must hold the token *and* be present in the shell at the moment the harness launches. Writing it to a shell rc file does not change an already-running shell or a running harness. The sequence is: set the variable, reload the shell (`source` the rc file), then restart the harness from that shell. The trap is silent: the config reads as correct, but calls fail to authenticate because the variable was empty when the harness started.
+
 ### Per-harness translations
 
 The container around the MCP entry varies per harness: the primary configuration file, its format, the key name, and the wrapper field shape all differ. The translation from Tribal's canonical shape to a given harness's native shape lives in [`references/harnesses/`](references/harnesses/). Each file there names the harness, its primary config-file path, the field shape it expects, a `jq` snippet that produces that shape from `tribal mcp-config`, and how to verify the harness has loaded the server.
@@ -208,7 +225,7 @@ Wiring up the harness usually means editing the harness's primary configuration 
 
 Where the harness exposes a CLI for adding MCP servers (a `<harness> mcp add` style command), prefer it. The CLI is the authorisation surface: it edits the config file as part of the user's authorised invocation, with no separate consent step needed. Direct file edits do require consent.
 
-## Step 5: (Optional) Verify provider readiness
+## Step 5: Verify provider readiness (the gate before first use)
 
 `tribal check --providers` extends the diagnostic suite with fatal probes against the embedding and inference providers. Running it is the gate for the user's first real ingest: bootstrap and the standard `tribal check` complete without touching providers, so a healthy install can still fail to do real work until the providers are configured. An ingest attempted before this probe passes fails on the provider itself, which the standard check never contacted, so the natural order is to clear `--providers` before the first ingest.
 
@@ -241,7 +258,7 @@ When in doubt: bootstrap's standard error is the first source of truth; `tribal 
 
 ## You're done
 
-Configuration is complete. The user's harness now has Tribal wired as an MCP server, and the providers (if configured) are verified.
+Configuration is complete: the harness has Tribal wired as an MCP server, and `tribal check --providers` passes, so the providers are reachable for the first ingest. If `--providers` has not passed yet, setup is not finished; return to Step 5.
 
 Remember the reload step from Step 4: the Tribal tools appear only after the harness reloads (or restarts). Make sure the user has done this before relying on Tribal.
 

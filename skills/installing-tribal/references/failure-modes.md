@@ -40,6 +40,10 @@ Repeated stdio crashes or HTTP/SSE connection drops after the binary self-report
 
 If the symptom persists across restarts, switching transport is worth trying as a diagnostic. Re-bootstrap with `tribal bootstrap --transport <stdio|http|sse>`. Note that re-bootstrap mints a fresh bearer token and re-emits the MCP config snippet; the user then needs to re-wire the harness with the new credentials, so the action is heavier than it looks.
 
+### Manual `curl` probes to the MCP endpoint return 401 or 406
+
+The MCP endpoint is not a plain REST URL, so a hand-rolled `curl` is a poor readiness probe. Unauthenticated, it returns `401`. Authenticated with the bearer token but sending an ordinary HTTP request, it returns `406`: the server is up and the token is accepted, but the request is not a valid MCP protocol exchange. Neither response means Tribal is broken, and a `406` in particular confirms the server is reachable and authenticating. Readiness is `tribal check --providers` passing plus a real MCP tool call from the wired harness, not a `2xx` from `curl`.
+
 ### Prompt loading failure
 
 Tribal supports two modes for loading prompt templates. The default is **embedded**: prompts ship inside the binary and load from memory. The opt-in is **on-disk**, configured via the YAML config; Tribal then reads the prompts from a user-specified directory. `tribal config show` displays the resolved mode and path.
