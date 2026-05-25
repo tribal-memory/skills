@@ -55,7 +55,7 @@ When a trigger fires, act on it. Tribal fades into the background; the agent doe
 
 ## The tool surface
 
-Tribal exposes its operations through the MCP tool protocol. **The canonical source for tool names, inputs, and output schemas is `List Tools` against the running Tribal MCP server.** The harness calls `List Tools` automatically at activation; the agent sees the live shape directly. Do not memorise tool names from this document. The labels below are un-namespaced category names; your harness's tool list will surface the same tools with a namespace prefix (e.g. `mcp__tribal__` in Claude Code).
+Tribal exposes its operations through the MCP tool protocol. **The canonical source for tool names, inputs, and output schemas is `List Tools` against the running Tribal MCP server.** The harness calls `List Tools` automatically at activation; the agent sees the live shape directly. Do not memorise tool names from this document. The labels below are un-namespaced category names; your harness surfaces the same tools under a harness-specific namespace prefix (in Claude Code, an `mcp__`-prefixed name). Match on the live `List Tools` output, not a memorised prefix.
 
 The categories, abstractly:
 
@@ -65,7 +65,7 @@ The categories, abstractly:
 - **Discover** by semantic similarity when answering questions or starting tasks.
 - **Explore** the relation graph from a known item to surface related context the user did not directly ask for.
 - **Get** by ID for full content of a specific item.
-- **Feedback** records the user's observations about retrieval quality to a local log. It does not influence what future `discover` calls return.
+- **Feedback** records the user's observations about retrieval quality to a private local log in the user's own Postgres. It does not influence what future `discover` calls return.
 
 For usage nuance (when to compose these, output interpretation patterns, workflow heuristics), see [`references/mcp-tools.md`](references/mcp-tools.md). For canonical tool definitions, look at how your harness surfaces each tool; the schemas come directly from Tribal's MCP `tools/list` response at activation.
 
