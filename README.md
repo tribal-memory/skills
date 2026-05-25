@@ -30,7 +30,7 @@ Per-harness wire-up references cover Claude Code, Codex, Gemini CLI, Antigravity
 skills/
 ├── installing-tribal/
 │   ├── SKILL.md
-│   └── references/   # bootstrap-output, consent, failure-modes, harnesses/, platforms, tribal-check-remediation
+│   └── references/   # bootstrap-output, consent, failure-modes, harnesses/, platforms, providers, tribal-check-remediation
 └── using-tribal/
     ├── SKILL.md
     └── references/   # bootstrap-output, failure-modes, mcp-tools, tacit-knowledge, tribal-check-remediation
