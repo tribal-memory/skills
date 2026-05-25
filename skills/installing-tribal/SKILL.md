@@ -58,10 +58,13 @@ tag=$(curl -fsSL https://api.github.com/repos/tribal-memory/tribal/releases/late
 mkdir tribal-docker && cd tribal-docker
 curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/docker-compose.yml" -o docker-compose.yml
 curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/.env.example" -o .env.example
+# Cloud provider? Set its key in .env before the next line, or the container will not boot.
 docker compose up
 ```
 
 The `.env.example` is the template for provider configuration (see [`references/providers.md`](references/providers.md)); the stack runs on a local Ollama without it.
+
+For a cloud provider, the API key must be in `.env` *before* that first `docker compose up`. Tribal validates provider config at startup, so a cloud provider without its key fails to boot the container, not just the first ingest.
 
 ### Verify the install
 
@@ -181,7 +184,7 @@ docker compose exec -T tribal sh -c 'TRIBAL_PROJECT_ID=$(cat /var/lib/tribal/tri
 
 When you only need to confirm the shape rather than wire it, note that the output carries the bearer token in its `Authorization` header; [`references/consent.md`](references/consent.md) covers inspecting it without exposing the value.
 
-Once wired, the harness must load the new server. A full session restart always works; some harnesses can reload MCP servers in-session, which is lighter, and the per-harness reference notes how.
+**IMPORTANT:** the newly-wired server does not appear in the current session until the harness reloads it; the Tribal MCP tools will be missing until then. Reload the harness's MCP servers (for Claude Code, `/reload-plugins`) or restart the session, and tell the user to do so as part of the handoff. The per-harness reference notes which applies; Codex and OpenCode currently need a full restart.
 
 ### Per-harness translations
 
@@ -239,6 +242,8 @@ When in doubt: bootstrap's standard error is the first source of truth; `tribal 
 ## You're done
 
 Configuration is complete. The user's harness now has Tribal wired as an MCP server, and the providers (if configured) are verified.
+
+The Tribal tools will not appear in the session until the harness reloads its MCP servers (Claude Code: `/reload-plugins`) or restarts. Make sure the user does this before relying on Tribal.
 
 For day-to-day use (capturing knowledge, querying it, traversing the graph, diagnosing issues), the `using-tribal` skill takes over. It activates whenever the user signals they want to save an insight, recall prior context, or approach a problem where Tribal might already have relevant knowledge.
 
