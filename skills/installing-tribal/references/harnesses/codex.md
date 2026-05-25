@@ -72,7 +72,7 @@ codex mcp list --json
 codex mcp get tribal
 ```
 
-Inside a Codex TUI session, `/mcp` lists active servers.
+Inside a Codex TUI session, `/mcp` lists active servers. Codex has no in-session MCP reload, so restart the session after wiring to pick up a newly-added server.
 
 ## Quirks
 

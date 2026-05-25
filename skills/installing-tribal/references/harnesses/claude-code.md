@@ -69,7 +69,7 @@ claude mcp list
 claude mcp get tribal
 ```
 
-Inside a Claude Code session, `/mcp` opens the runtime status panel.
+Inside a Claude Code session, `/mcp` opens the runtime status panel, and `/reload-plugins` reloads a newly-wired MCP server in-session without a full restart. A restart is only needed to pick up newly-installed *skills*, not newly-wired servers.
 
 ## Quirks
 
