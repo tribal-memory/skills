@@ -15,6 +15,8 @@ Returns one of:
 - `Linux x86_64` for Linux on x86_64
 - `Linux aarch64` for Linux on arm64
 
+Under an x86 (Rosetta) shell on Apple Silicon, `uname -sm` reports `Darwin x86_64`, the same as Intel. This rarely matters, since the binary, Homebrew, and the Docker image are all arch-aware (below), but the detection can misread an emulated shell as Intel.
+
 ## What does not vary
 
 Most of the install and bootstrap surface is platform-agnostic. The agent should not branch on platform unless one of the entries in the next section applies.

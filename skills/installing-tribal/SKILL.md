@@ -22,9 +22,7 @@ Also load [`references/platforms.md`](references/platforms.md). It carries the d
 
 ## Step 1: Install the binary
 
-Three install paths. They produce different process lifecycles for Tribal.
-
-**Recommended: install the binary** (Homebrew on macOS, the shell installer on Linux). It is the least to manage: a single binary on PATH, simple to upgrade and to remove, and the harness can spawn it per session with no long-running process to babysit. The Docker Compose path is heavier (a container plus a bundled Postgres, HTTP transport, a long-running stack), and it puts provider configuration and secrets in a compose `.env`; reach for it only when a self-contained, containerised stack is specifically wanted.
+Three install paths, below. Which one fits is the user's call, because the consequences land on them: the binary (Homebrew on macOS, the shell installer on Linux) is the lightest to run, upgrade, and remove, but needs a Postgres they supply; Docker Compose bundles its own Postgres but leaves a long-running container, HTTP transport, and secrets in a `.env` to manage. The binary is the simpler default for most, but it is a trade-off to put to the user, not a choice to make for them, so confirm the path before installing.
 
 ### Homebrew (macOS)
 
@@ -49,7 +47,7 @@ Runs Tribal as a long-running server in a container, alongside a bundled Postgre
 
 The only file the user needs is `docker-compose.yml`; the entrypoint is baked into the published image. The image tag is pinned inside that file, so the compose file and the image must come from the same release. **Take the compose file from the latest release, into a fresh directory.**
 
-**IMPORTANT:** do not reuse an existing local checkout of the Tribal repository without confirming it is current. A stale checkout pins an old image tag in its compose file, and `docker compose up` will silently run that old version. If a checkout is reused, bring it to the latest release tag first (`git fetch --tags`, then check out that tag).
+**IMPORTANT:** reusing an existing local checkout is a trap. A stale checkout pins an old image tag in its compose file, so `docker compose up` silently runs that old version; that is why the steps fetch into a fresh directory. If a checkout is reused, bringing it to the latest release tag first (`git fetch --tags`, then check out that tag) avoids the stale pin.
 
 One way to fetch the release compose into a clean directory:
 
@@ -58,13 +56,15 @@ tag=$(curl -fsSL https://api.github.com/repos/tribal-memory/tribal/releases/late
 mkdir tribal-docker && cd tribal-docker
 curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/docker-compose.yml" -o docker-compose.yml
 curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/.env.example" -o .env.example
-# Cloud provider? Set its key in .env first (see below).
+# Cloud provider? Create .env from .env.example and set its key first (see below).
 docker compose up
 ```
 
-The `.env.example` is the template for provider configuration (see [`references/providers.md`](references/providers.md)); the stack runs on a local Ollama without it.
+`docker compose` reads `.env`, not `.env.example`, so copy the template to `.env` and edit that one. With no `.env` (or its defaults), the stack runs on a local Ollama.
 
-For a cloud provider, the API key must be in `.env` *before* that first `docker compose up`. Tribal validates provider config at startup, so a cloud provider without its key fails to boot the container, not just the first ingest.
+**IMPORTANT:** for a cloud provider, set the provider, model, and key in `.env` before that first `docker compose up`. Tribal validates provider config at startup, so a cloud provider without its key fails to boot the container, not just the first ingest.
+
+The example's model values are placeholders, and not every current model works: some are reasoning models Tribal cannot yet drive. Confirm the model against [`references/providers.md`](references/providers.md) rather than uncommenting the example blind.
 
 ### Verify the install
 
@@ -210,7 +210,7 @@ Where the harness exposes a CLI for adding MCP servers (a `<harness> mcp add` st
 
 ## Step 5: (Optional) Verify provider readiness
 
-`tribal check --providers` extends the diagnostic suite with fatal probes against the embedding and inference providers. Running it is the gate for the user's first real ingest: bootstrap and the standard `tribal check` complete without touching providers, so a healthy install can still fail to do real work until the providers are configured.
+`tribal check --providers` extends the diagnostic suite with fatal probes against the embedding and inference providers. Running it is the gate for the user's first real ingest: bootstrap and the standard `tribal check` complete without touching providers, so a healthy install can still fail to do real work until the providers are configured. An ingest attempted before this probe passes fails on the provider itself, which the standard check never contacted, so the natural order is to clear `--providers` before the first ingest.
 
 ```bash
 tribal check --providers
