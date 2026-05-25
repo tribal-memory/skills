@@ -27,7 +27,7 @@ Three install paths. They produce different process lifecycles for Tribal.
 ### Homebrew (macOS)
 
 ```bash
-brew install samfolo/homebrew-tap/tribal
+brew install tribal-memory/homebrew-tap/tribal
 ```
 
 Installs a `tribal` binary on PATH. Homebrew resolves the architecture. The harness can spawn the binary per session, or run it as a long-running server (Step 2).
@@ -36,7 +36,7 @@ Installs a `tribal` binary on PATH. Homebrew resolves the architecture. The harn
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/samfolo/tribal/releases/latest/download/tribal-installer.sh | sh
+  https://github.com/tribal-memory/tribal/releases/latest/download/tribal-installer.sh | sh
 ```
 
 Targets macOS and Linux. Same end state as Homebrew: a single binary on PATH.
@@ -44,7 +44,7 @@ Targets macOS and Linux. Same end state as Homebrew: a single binary on PATH.
 ### Docker Compose (containerised)
 
 ```bash
-git clone https://github.com/samfolo/tribal && cd tribal && docker compose up
+git clone https://github.com/tribal-memory/tribal && cd tribal && docker compose up
 ```
 
 Runs Tribal as a long-running server in a container. The harness wires to the container over the network. Requires HTTP transport (Step 2 explains why).
@@ -151,7 +151,7 @@ To wire Tribal into a specific harness, read the corresponding file under that d
 
 ### When there is no reference file for the user's harness
 
-The files in [`references/harnesses/`](references/harnesses/) cover the named target harnesses. For any harness without a dedicated file, the canonical `tribal mcp-config` output is still the source of truth. Read the harness's own MCP configuration documentation, identify the field shape it expects, and produce the translation with the user. If the wire-up works and the user is willing to contribute it back, the path is a pull request against `samfolo/tribal-skills`.
+The files in [`references/harnesses/`](references/harnesses/) cover the named target harnesses. For any harness without a dedicated file, the canonical `tribal mcp-config` output is still the source of truth. Read the harness's own MCP configuration documentation, identify the field shape it expects, and produce the translation with the user. If the wire-up works and the user is willing to contribute it back, the path is a pull request against `tribal-memory/skills`.
 
 ### Scope: project by default
 
