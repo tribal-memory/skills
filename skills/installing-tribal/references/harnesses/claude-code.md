@@ -2,6 +2,10 @@
 
 Primary documentation: [docs.claude.com/en/docs/claude-code/mcp](https://docs.claude.com/en/docs/claude-code/mcp). This reference is a cached snapshot; consult the primary documentation as supplementary context when wiring or troubleshooting.
 
+## Installing the skills
+
+`npx skills add` symlinks Tribal's skills into `.claude/skills/` (project scope) or `~/.claude/skills/` (global). Claude Code does not use the agent-skills standard's default location, so the skills CLI targets this Claude-specific path and will not create it. Run `mkdir -p .claude/skills` (or the global path) before `npx skills add`, then restart Claude Code so the skills load.
+
 ## Wire-up command (preferred)
 
 Bootstrap's stderr output prints this directly:

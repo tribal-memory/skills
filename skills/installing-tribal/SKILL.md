@@ -16,9 +16,9 @@ If `using-tribal` should activate after configuration is complete, this skill ha
 
 ## Before you start
 
-**IMPORTANT:** Load [`references/consent.md`](../../references/consent.md) before doing anything else. It is the ask-first protocol for credential-bearing files. This skill touches several of those during wire-up, and skipping the protocol risks reading or writing user secrets without consent.
+**IMPORTANT:** Load [`references/consent.md`](references/consent.md) before doing anything else. It is the ask-first protocol for credential-bearing files. This skill touches several of those during wire-up, and skipping the protocol risks reading or writing user secrets without consent.
 
-Also load [`references/platforms.md`](../../references/platforms.md). It carries the detection one-liner (`uname -sm`) and the single source for what varies across macOS Intel, macOS Apple Silicon, and Linux. The steps below assume the active platform is known.
+Also load [`references/platforms.md`](references/platforms.md). It carries the detection one-liner (`uname -sm`) and the single source for what varies across macOS Intel, macOS Apple Silicon, and Linux. The steps below assume the active platform is known.
 
 ## Step 1: Install the binary
 
@@ -57,7 +57,7 @@ For the direct install paths (Homebrew, shell installer), success is a version s
 tribal --version
 ```
 
-If the command is not found, the installer wrote a PATH update to the shell's rc file that the current session has not re-read. Resolution depends on the active shell; see [`references/platforms.md`](../../references/platforms.md).
+If the command is not found, the installer wrote a PATH update to the shell's rc file that the current session has not re-read. Resolution depends on the active shell; see [`references/platforms.md`](references/platforms.md).
 
 For the Docker Compose path, success is the `tribal` service reporting `Up`:
 
@@ -77,7 +77,7 @@ tribal bootstrap
 
 The stderr output enumerates the next steps with concrete commands appropriate to the chosen transport, the install state, and whether credentials were written successfully. Treat it as the canonical run-book. The rest of this skill is the meta-frame around that output: what to configure before running bootstrap, what the trade-offs mean, and what to do when the output cannot anticipate the user's environment.
 
-For scripted consumers, `--json` emits the same data as a structured object on stdout (no next-steps prose). The shape is documented in [`references/bootstrap-output.md`](../../references/bootstrap-output.md).
+For scripted consumers, `--json` emits the same data as a structured object on stdout (no next-steps prose). The shape is documented in [`references/bootstrap-output.md`](references/bootstrap-output.md).
 
 ```bash
 tribal bootstrap --json
@@ -123,7 +123,7 @@ Bootstrap's stderr output directs the user to run `tribal check`. The check comm
 tribal check
 ```
 
-For programmatic consumption, use `--json`. The shape and the walkthrough pattern (act on programmatic remediations, hand off on sensitive ones) live in [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md).
+For programmatic consumption, use `--json`. The shape and the walkthrough pattern (act on programmatic remediations, hand off on sensitive ones) live in [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md).
 
 ```bash
 tribal check --json
@@ -131,27 +131,27 @@ tribal check --json
 
 ### When `tribal check` reports `ok: true` but something is still wrong
 
-`tribal check` covers the configurable surface. Network-level issues (VPN blocking the database path, firewall rules, DNS flakes) can mean Tribal reports healthy while the user cannot do real work. [`references/failure-modes.md`](../../references/failure-modes.md) covers this disambiguation.
+`tribal check` covers the configurable surface. Network-level issues (VPN blocking the database path, firewall rules, DNS flakes) can mean Tribal reports healthy while the user cannot do real work. [`references/failure-modes.md`](references/failure-modes.md) covers this disambiguation.
 
 ## Step 4: Wire Tribal into your harness's MCP config
 
-Bootstrap's stderr output gives the wire-up command directly for Claude Code (`claude mcp add-json tribal "$(tribal mcp-config)"`). For other harnesses, the same canonical `tribal mcp-config` output is the source of truth; the translation to each harness's native shape lives in [`references/harnesses/`](../../references/harnesses/).
+Bootstrap's stderr output gives the wire-up command directly for Claude Code (`claude mcp add-json tribal "$(tribal mcp-config)"`). For other harnesses, the same canonical `tribal mcp-config` output is the source of truth; the translation to each harness's native shape lives in [`references/harnesses/`](references/harnesses/).
 
 ```bash
 tribal mcp-config
 ```
 
-The command always emits JSON to stdout (no `--json` flag); warnings, if any, go to stderr. The shape (transport discriminator, stdio vs HTTP fields, where the bearer token lives) is documented in [`references/bootstrap-output.md`](../../references/bootstrap-output.md). The agent should run the command and inspect the live output rather than relying on a memorised shape.
+The command always emits JSON to stdout (no `--json` flag); warnings, if any, go to stderr. The shape (transport discriminator, stdio vs HTTP fields, where the bearer token lives) is documented in [`references/bootstrap-output.md`](references/bootstrap-output.md). The agent should run the command and inspect the live output rather than relying on a memorised shape.
 
 ### Per-harness translations
 
-The container around the MCP entry varies per harness: the primary configuration file, its format, the key name, and the wrapper field shape all differ. The translation from Tribal's canonical shape to a given harness's native shape lives in [`references/harnesses/`](../../references/harnesses/). Each file there names the harness, its primary config-file path, the field shape it expects, a `jq` snippet that produces that shape from `tribal mcp-config`, and how to verify the harness has loaded the server.
+The container around the MCP entry varies per harness: the primary configuration file, its format, the key name, and the wrapper field shape all differ. The translation from Tribal's canonical shape to a given harness's native shape lives in [`references/harnesses/`](references/harnesses/). Each file there names the harness, its primary config-file path, the field shape it expects, a `jq` snippet that produces that shape from `tribal mcp-config`, and how to verify the harness has loaded the server.
 
 To wire Tribal into a specific harness, read the corresponding file under that directory.
 
 ### When there is no reference file for the user's harness
 
-The files in [`references/harnesses/`](../../references/harnesses/) cover the named target harnesses. For any harness without a dedicated file, the canonical `tribal mcp-config` output is still the source of truth. Read the harness's own MCP configuration documentation, identify the field shape it expects, and produce the translation with the user. If the wire-up works and the user is willing to contribute it back, the path is a pull request against `samfolo/tribal-skills`.
+The files in [`references/harnesses/`](references/harnesses/) cover the named target harnesses. For any harness without a dedicated file, the canonical `tribal mcp-config` output is still the source of truth. Read the harness's own MCP configuration documentation, identify the field shape it expects, and produce the translation with the user. If the wire-up works and the user is willing to contribute it back, the path is a pull request against `samfolo/tribal-skills`.
 
 ### Scope: project by default
 
@@ -159,7 +159,7 @@ Most harnesses support per-project and per-user scope for MCP server entries. Th
 
 ### Consent before writing
 
-Wiring up the harness usually means editing the harness's primary configuration file (typically a JSON or TOML at a path under `~/.<harness>/`). Those files are covered by the consent protocol; the agent must ask the user before reading or writing them. See [`references/consent.md`](../../references/consent.md).
+Wiring up the harness usually means editing the harness's primary configuration file (typically a JSON or TOML at a path under `~/.<harness>/`). Those files are covered by the consent protocol; the agent must ask the user before reading or writing them. See [`references/consent.md`](references/consent.md).
 
 Where the harness exposes a CLI for adding MCP servers (a `<harness> mcp add` style command), prefer it. The CLI is the authorisation surface: it edits the config file as part of the user's authorised invocation, with no separate consent step needed. Direct file edits do require consent.
 
@@ -173,11 +173,11 @@ tribal check --providers
 
 Bootstrap's stderr output prompts this step as part of the numbered next steps. Run it once the user has configured their provider (a local Ollama with the required models pulled, or API keys for a cloud provider set in the environment).
 
-The remediation pattern is the same as for the core check suite: programmatic remediations the agent performs autonomously, sensitive ones (API keys, environment variables) relayed to the user. See [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md).
+The remediation pattern is the same as for the core check suite: programmatic remediations the agent performs autonomously, sensitive ones (API keys, environment variables) relayed to the user. See [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md).
 
 ### Getting API keys to Tribal
 
-If the user has configured a cloud provider, the API key must reach the `tribal` process. The simplest persistent path is to add the key directly to the Tribal config file at the path bootstrap printed (typically `~/.config/tribal/tribal.yaml`); `api_key` is a first-class field on each provider stage. The agent can inspect the current layout with `tribal config show` to identify the right field. Writing the file is a sensitive operation; the consent protocol in [`references/consent.md`](../../references/consent.md) applies, and the user may prefer to edit it themselves.
+If the user has configured a cloud provider, the API key must reach the `tribal` process. The simplest persistent path is to add the key directly to the Tribal config file at the path bootstrap printed (typically `~/.config/tribal/tribal.yaml`); `api_key` is a first-class field on each provider stage. The agent can inspect the current layout with `tribal config show` to identify the right field. Writing the file is a sensitive operation; the consent protocol in [`references/consent.md`](references/consent.md) applies, and the user may prefer to edit it themselves.
 
 For one-time verification without persistence, prepending the key to the command works: `OPENAI_API_KEY=<key> tribal check --providers`. Other persistence paths (shell rc, `.env` files, MCP-config env blocks) are valid alternatives the agent can offer based on the user's preference; the YAML config is the recommended default.
 
@@ -189,8 +189,8 @@ Install-time failures fall into a small set of patterns, almost all of them with
 
 - **Bootstrap itself fails.** The standard error names the failure inline. Common cases: database unreachable, git remote undetectable (pass `--remote <url>`), credentials write failure (the token is shown inline for manual save).
 - **`tribal --version` returns "command not found"** after install. The installer wrote to a PATH the current shell has not re-read. Covered in Step 1's verification subsection.
-- **`tribal check` fails on first run.** Surface the `remediation` field per the pattern in [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md).
-- **Runtime or network-level issues** (worker death, transport errors, VPN blocking the database, prompt I/O). [`references/failure-modes.md`](../../references/failure-modes.md) covers the patterns.
+- **`tribal check` fails on first run.** Surface the `remediation` field per the pattern in [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md).
+- **Runtime or network-level issues** (worker death, transport errors, VPN blocking the database, prompt I/O). [`references/failure-modes.md`](references/failure-modes.md) covers the patterns.
 
 When in doubt: bootstrap's standard error is the first source of truth; `tribal check` is the next; the failure-modes reference handles the long tail.
 
@@ -204,9 +204,9 @@ For day-to-day use (capturing knowledge, querying it, traversing the graph, diag
 
 The skill body is the entry point; the files below carry the depth.
 
-- [`references/consent.md`](../../references/consent.md): **read first.** The ask-first protocol for credential-bearing files. Applies to every file write this skill might do.
-- [`references/platforms.md`](../../references/platforms.md): read early. Detection one-liner and what varies across macOS Intel, macOS Apple Silicon, and Linux.
-- [`references/bootstrap-output.md`](../../references/bootstrap-output.md): read when parsing `tribal bootstrap --json` or `tribal mcp-config` output.
-- [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md): read when handling `tribal check` failures, including from `--providers`.
-- [`references/harnesses/`](../../references/harnesses/): read when wiring Tribal into a specific harness. Each file under the directory covers one harness.
-- [`references/failure-modes.md`](../../references/failure-modes.md): read when something fails outside the check suite (worker death, transport errors, VPN blocking the database, prompt I/O).
+- [`references/consent.md`](references/consent.md): **read first.** The ask-first protocol for credential-bearing files. Applies to every file write this skill might do.
+- [`references/platforms.md`](references/platforms.md): read early. Detection one-liner and what varies across macOS Intel, macOS Apple Silicon, and Linux.
+- [`references/bootstrap-output.md`](references/bootstrap-output.md): read when parsing `tribal bootstrap --json` or `tribal mcp-config` output.
+- [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md): read when handling `tribal check` failures, including from `--providers`.
+- [`references/harnesses/`](references/harnesses/): read when wiring Tribal into a specific harness. Each file under the directory covers one harness.
+- [`references/failure-modes.md`](references/failure-modes.md): read when something fails outside the check suite (worker death, transport errors, VPN blocking the database, prompt I/O).

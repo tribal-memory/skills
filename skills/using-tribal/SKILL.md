@@ -30,7 +30,7 @@ Two rules constrain the prose: **no first-person voice** (no "I noticed", no "we
 
 When the user asks for an ingest, the job is to enrich the candidate with available context, not to gatekeep it. Submit without asking for confirmation. The ingestion pipeline performs additional tacit extraction downstream of any single ingest call.
 
-**Mandatory pre-read:** load [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md) before calling the ingest tool for the first time in a session. It is the canonical guide: the four-component pattern in full, worked transformations, the audience rules, the enrichment pattern, and the starter prompts.
+**Mandatory pre-read:** load [`references/tacit-knowledge.md`](references/tacit-knowledge.md) before calling the ingest tool for the first time in a session. It is the canonical guide: the four-component pattern in full, worked transformations, the audience rules, the enrichment pattern, and the starter prompts.
 
 ## Triggers
 
@@ -51,7 +51,7 @@ Implicit triggers (the user signals without naming):
 - The user explaining a hard-won lesson conversationally, without explicitly asking it to be saved.
 - The start of a new task where prior context might be relevant. (See Read journeys below.)
 
-When a trigger fires, act on it. Tribal fades into the background; the agent does not interrupt the user's flow with confirmation prompts. Ingests are durable, so enrich the candidate with care before submission (per [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md)).
+When a trigger fires, act on it. Tribal fades into the background; the agent does not interrupt the user's flow with confirmation prompts. Ingests are durable, so enrich the candidate with care before submission (per [`references/tacit-knowledge.md`](references/tacit-knowledge.md)).
 
 ## The tool surface
 
@@ -67,7 +67,7 @@ The categories, abstractly:
 - **Get** by ID for full content of a specific item.
 - **Feedback** records the user's observations about retrieval quality to a local log. It does not influence what future `discover` calls return.
 
-For usage nuance (when to compose these, output interpretation patterns, workflow heuristics), see [`references/mcp-tools.md`](../../references/mcp-tools.md). For canonical tool definitions, look at how your harness surfaces each tool; the schemas come directly from Tribal's MCP `tools/list` response at activation.
+For usage nuance (when to compose these, output interpretation patterns, workflow heuristics), see [`references/mcp-tools.md`](references/mcp-tools.md). For canonical tool definitions, look at how your harness surfaces each tool; the schemas come directly from Tribal's MCP `tools/list` response at activation.
 
 ## Read journeys
 
@@ -83,7 +83,7 @@ Reasons to read proactively, beyond direct session context:
 
 Composition pattern: `discover` (semantic search over the graph), then `explore` (traverse the relation graph from a known item, generously), then `get` (fetch full content by ID). Most read journeys start with a `discover` against the task description or a recent user message; results drive several `explore` calls to map the relation neighbourhood, with `get` reserved for items the agent wants the full text of.
 
-For output interpretation (item IDs, standing values, reference shapes, traversal direction), see [`references/mcp-tools.md`](../../references/mcp-tools.md).
+For output interpretation (item IDs, standing values, reference shapes, traversal direction), see [`references/mcp-tools.md`](references/mcp-tools.md).
 
 ## The diagnostic primitive
 
@@ -95,7 +95,7 @@ Agent autonomy applies. Where the remediation is programmatic and touches no sen
 
 If `tribal check --json` reports `ok: true` and the user still sees a problem, the issue lives outside the surface the binary can introspect. See the next section.
 
-For the walkthrough pattern in full (envelope shape, autonomy rules, iteration), see [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md).
+For the walkthrough pattern in full (envelope shape, autonomy rules, iteration), see [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md).
 
 ## When things go wrong outside `tribal check`
 
@@ -103,7 +103,7 @@ Some failure modes live outside the configuration surface the binary can introsp
 
 The highest-priority disambiguation is **"is this Tribal, or the network in front of it?"**. Corporate VPNs commonly block the path to managed-Postgres providers; the symptom is opaque (MCP tool calls fail or hang), but the binary is fine. Run `tribal check --json` first. If the database-reachability check fails, the issue is network-level. If every check passes, the issue is something else again.
 
-For the catalogue of non-check failure modes (worker death, transport errors, prompt I/O failures, git remote detection during bootstrap), see [`references/failure-modes.md`](../../references/failure-modes.md). Each entry names the symptom and the remediation pattern; the agent matches the user's report against the catalogue rather than guessing.
+For the catalogue of non-check failure modes (worker death, transport errors, prompt I/O failures, git remote detection during bootstrap), see [`references/failure-modes.md`](references/failure-modes.md). Each entry names the symptom and the remediation pattern; the agent matches the user's report against the catalogue rather than guessing.
 
 ## The feedback tool
 
@@ -120,7 +120,7 @@ For the canonical signature, look at how your harness surfaces the feedback tool
 
 ## References
 
-- [`references/tacit-knowledge.md`](../../references/tacit-knowledge.md): read before calling the ingest tool for the first time in a session. Canonical guide to phrasing ingests (four-component pattern, worked transformations, audience rules).
-- [`references/mcp-tools.md`](../../references/mcp-tools.md): read for usage nuance, workflow composition, and output interpretation patterns. Tool definitions remain canonical against `List Tools`.
-- [`references/tribal-check-remediation.md`](../../references/tribal-check-remediation.md): read when running `tribal check --json` and walking the user through remediation.
-- [`references/failure-modes.md`](../../references/failure-modes.md): read when the user reports a problem and `tribal check` reports `ok: true`.
+- [`references/tacit-knowledge.md`](references/tacit-knowledge.md): read before calling the ingest tool for the first time in a session. Canonical guide to phrasing ingests (four-component pattern, worked transformations, audience rules).
+- [`references/mcp-tools.md`](references/mcp-tools.md): read for usage nuance, workflow composition, and output interpretation patterns. Tool definitions remain canonical against `List Tools`.
+- [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md): read when running `tribal check --json` and walking the user through remediation.
+- [`references/failure-modes.md`](references/failure-modes.md): read when the user reports a problem and `tribal check` reports `ok: true`.
