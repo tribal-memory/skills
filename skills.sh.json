@@ -1,0 +1,10 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {
+      "title": "Tribal",
+      "description": "Set up Tribal and use it day-to-day: capture and query tacit engineering knowledge through your agent harness.",
+      "skills": ["installing-tribal", "using-tribal"]
+    }
+  ]
+}
