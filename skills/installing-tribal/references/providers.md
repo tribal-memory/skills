@@ -49,7 +49,7 @@ Model IDs change as providers release new versions. Consult the source of truth 
 A working starting point at the time of writing:
 
 - Embedding (cloud): `text-embedding-3-small`. **The embedding column is currently fixed at 768 dimensions**, and Tribal requests 768 from the model, so the embedding model must produce 768 dimensions natively or support reduction to 768. `text-embedding-3-small` supports reduction to 768.
-- Inference, OpenAI (cloud): Tribal sends `max_tokens` on every inference request, so a standard chat model is needed. `gpt-4o-mini` is the cheap default; `gpt-4o` or the `gpt-4.1` family are more capable. The o-series and the gpt-5.x line are reasoning models that accept only `max_completion_tokens`, so they will not work until Tribal makes that configurable.
+- Inference, OpenAI (cloud): Tribal sends `max_tokens` on every inference request, so a standard chat model is needed. `gpt-4o-mini` is the cheap default; `gpt-4o` or the `gpt-4.1` family are more capable. The o-series and the gpt-5.x line are reasoning models that accept only `max_completion_tokens`, so they do not work with Tribal's current `max_tokens` request shape.
 - Inference, Anthropic (cloud): any Claude model works, because the Anthropic API requires `max_tokens` regardless, which makes it the simplest route to a more capable inference model today. Anthropic has no embedding API, so embedding stays on Ollama or OpenAI.
 
 After configuring a cloud provider, gate the first ingest with `tribal check --providers`; the walkthrough is in [`tribal-check-remediation.md`](tribal-check-remediation.md).

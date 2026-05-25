@@ -35,7 +35,7 @@ Produces the per-server entry the agent merges under the existing `mcpServers` k
 
 ## Verification
 
-The editor's *Manage MCP Servers* panel surfaces registered servers.
+The editor's *Manage MCP Servers* panel surfaces registered servers. Antigravity has no in-session MCP reload, so restart the session after wiring to pick up a newly-added server.
 
 ## Quirks
 

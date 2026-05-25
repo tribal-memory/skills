@@ -56,7 +56,7 @@ Produces the per-server entry the agent merges under the existing `mcpServers` k
 gemini mcp list
 ```
 
-Inside a Gemini CLI session, `/mcp` lists active servers.
+Inside a Gemini CLI session, `/mcp` lists active servers. Gemini CLI has no in-session MCP reload, so restart the session after wiring to pick up a newly-added server.
 
 ## Quirks
 

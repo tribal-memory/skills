@@ -58,7 +58,7 @@ tag=$(curl -fsSL https://api.github.com/repos/tribal-memory/tribal/releases/late
 mkdir tribal-docker && cd tribal-docker
 curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/docker-compose.yml" -o docker-compose.yml
 curl -fsSL "https://raw.githubusercontent.com/tribal-memory/tribal/$tag/.env.example" -o .env.example
-# Cloud provider? Set its key in .env before the next line, or the container will not boot.
+# Cloud provider? Set its key in .env first (see below).
 docker compose up
 ```
 
@@ -84,7 +84,7 @@ docker compose ps
 
 The binary lives inside the container; the host does not need it on PATH.
 
-If the `tribal` service is not `Up` while Postgres reports healthy, a likely cause is **host port 8725 already in use** by a previous Tribal stack or another process. Identifying what holds it is worth doing before retrying: a stale Tribal stack can be torn down (with the user's agreement) to free the port, while something the user relies on is better flagged than stopped. A free host port is also an option, remembering that the port mapping and `TRIBAL_PUBLIC_MCP_URL` move together.
+If the `tribal` service is not `Up` while Postgres reports healthy, a likely cause is **host port 8725 already in use** by a previous Tribal stack or another process. Identify what holds it before retrying: a stale Tribal stack can be torn down with the user's agreement; anything else, flag rather than stop. Mapping a free host port is also an option, remembering that the port mapping and `TRIBAL_PUBLIC_MCP_URL` move together.
 
 ## Step 2: Run `tribal bootstrap`
 
@@ -182,9 +182,9 @@ On the Docker Compose path, thread the project id in, the same as `tribal check`
 docker compose exec -T tribal sh -c 'TRIBAL_PROJECT_ID=$(cat /var/lib/tribal/tribal/project_id) tribal mcp-config'
 ```
 
-When you only need to confirm the shape rather than wire it, note that the output carries the bearer token in its `Authorization` header; [`references/consent.md`](references/consent.md) covers inspecting it without exposing the value.
+When you only need to confirm the shape rather than wire it, note that the output carries the bearer token in its `Authorization` header; see [`references/consent.md`](references/consent.md) for inspecting it without printing the value to the transcript.
 
-**IMPORTANT:** the newly-wired server does not appear in the current session until the harness reloads it; the Tribal MCP tools will be missing until then. Reload the harness's MCP servers (for Claude Code, `/reload-plugins`) or restart the session, and tell the user to do so as part of the handoff. The per-harness reference notes which applies; Codex and OpenCode currently need a full restart.
+**IMPORTANT:** the newly-wired server does not appear in the current session until the harness loads it; the Tribal MCP tools will be missing until then. Most harnesses need a session restart; some can reload in-session (Claude Code, via `/reload-plugins`). The per-harness reference notes which applies; tell the user as part of the handoff.
 
 ### Per-harness translations
 
@@ -243,7 +243,7 @@ When in doubt: bootstrap's standard error is the first source of truth; `tribal 
 
 Configuration is complete. The user's harness now has Tribal wired as an MCP server, and the providers (if configured) are verified.
 
-The Tribal tools will not appear in the session until the harness reloads its MCP servers (Claude Code: `/reload-plugins`) or restarts. Make sure the user does this before relying on Tribal.
+Remember the reload step from Step 4: the Tribal tools appear only after the harness reloads (or restarts). Make sure the user has done this before relying on Tribal.
 
 For day-to-day use (capturing knowledge, querying it, traversing the graph, diagnosing issues), the `using-tribal` skill takes over. It activates whenever the user signals they want to save an insight, recall prior context, or approach a problem where Tribal might already have relevant knowledge.
 
