@@ -71,7 +71,7 @@ docker compose up
 3. **For a cloud provider,** set the provider, model, and base URL for the embedding stage and all three inference stages, plus the API key. Changing a stage's provider without also setting its base URL misroutes that request to the local Ollama address. The shipped `.env.example` carries a ready-to-paste block; the channels and the model IDs that actually work are in [`references/providers.md`](references/providers.md).
 4. **Only then** run `docker compose up`.
 
-A cloud provider missing its key fails to boot the container, because Tribal validates provider config at startup. A cloud provider with an unsupported model boots but fails the first ingest: the `.env.example` model values are placeholders, and not every current model works (some are reasoning models Tribal cannot yet drive, because it sends `max_tokens`, which those reject). Confirm each model against [`references/providers.md`](references/providers.md) rather than uncommenting the example blind.
+A cloud provider missing its key fails to boot the container, because Tribal validates provider config at startup. A cloud provider with an unsupported model boots but fails the first ingest, so confirm each model against [`references/providers.md`](references/providers.md) rather than uncommenting the example blind.
 
 By default this path registers a generic placeholder project (`tribal-docker-local`, with a placeholder remote), so ingests attach to that rather than the repository the user cares about. To bind Tribal to the real repo, either set `TRIBAL_PROJECT_NAME` and `TRIBAL_PROJECT_REMOTE` in `.env` before the first `docker compose up`, or, after wiring, have the agent run `tribal project register --remote <repo-url>`.
 
