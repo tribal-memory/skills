@@ -44,6 +44,10 @@ If the symptom persists across restarts, switching transport is worth trying as 
 
 The MCP endpoint is not a plain REST URL, so a hand-rolled `curl` is a poor readiness probe. Unauthenticated, it returns `401`. Authenticated with the bearer token but sending an ordinary HTTP request, it returns `406`: the server is up and the token is accepted, but the request is not a valid MCP protocol exchange. Neither response means Tribal is broken, and a `406` in particular confirms the server is reachable and authenticating. Readiness is `tribal check --providers` passing plus a real MCP tool call from the wired harness, not a `2xx` from `curl`.
 
+### Sandboxed harness: `docker` or PATH permission errors
+
+Some harnesses run shell commands in a sandbox (Codex, for example). Under one, a `docker` command can fail to reach the daemon (`permission denied while trying to connect to the Docker daemon socket`), and an installer can warn that it `could not update PATH: Operation not permitted`. These come from the harness's sandbox, not from Tribal: approve the escalation the harness offers, or run the affected command in an unsandboxed context. Neither is a sign of a broken install.
+
 ### Prompt loading failure
 
 Tribal supports two modes for loading prompt templates. The default is **embedded**: prompts ship inside the binary and load from memory. The opt-in is **on-disk**, configured via the YAML config; Tribal then reads the prompts from a user-specified directory. `tribal config show` displays the resolved mode and path.

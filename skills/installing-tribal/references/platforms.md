@@ -30,6 +30,7 @@ Most of the install and bootstrap surface is platform-agnostic. The agent should
 
 The handful of real divergences:
 
-- **Shell rc file.** macOS defaults to `~/.zshrc` (zsh has been the default shell since Catalina). Linux distributions vary; common defaults include `~/.bashrc` and `~/.zshrc`. The agent should detect the active shell from `$SHELL` rather than assuming.
+- **Shell rc file.** macOS defaults to `~/.zshrc` (zsh has been the default shell since Catalina). Linux distributions vary; common defaults include `~/.bashrc` and `~/.zshrc`. The agent should detect the active shell from `$SHELL` rather than assuming. To make a new rc entry take effect in the current session, `source` the file (`source ~/.zshrc`); opening a new terminal does the same.
 - **Local Ollama install.** macOS uses Homebrew or the official installer; Linux uses the shell installer at `https://ollama.com/install.sh`. Both produce a binary the rest of the flow uses identically.
 - **Container runtime on Linux.** Docker Desktop is macOS-specific; Linux users typically install `docker-ce` and `docker-compose-plugin` through their distribution's package manager. The Compose file itself is unaffected.
+- **Reserved zsh variable names.** zsh makes certain names read-only (`status` aliases `$?`; also `path`, `argv`, `pipestatus`). Assigning to one aborts the command with `read-only variable: <name>`. When scripting on zsh (the macOS default), avoid them as variable names; pick a distinct name such as `svc_status` rather than `status`.
