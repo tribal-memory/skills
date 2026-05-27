@@ -49,7 +49,7 @@ The only file the user needs is `docker-compose.yml`; the entrypoint is baked in
 
 **IMPORTANT:** reusing an existing local checkout is a trap. A stale checkout pins an old image tag in its compose file, so `docker compose up` silently runs that old version; that is why the steps fetch into a fresh directory. If a checkout is reused, bringing it to the latest release tag first (`git fetch --tags`, then check out that tag) avoids the stale pin.
 
-One way to fetch the release compose into a clean directory:
+One way to fetch the release compose into a fresh directory in the current working directory (not `$HOME` or an absolute path):
 
 ```bash
 tag=$(curl -fsSL https://api.github.com/repos/tribal-memory/tribal/releases/latest | jq -r .tag_name)
@@ -69,7 +69,8 @@ docker compose up
 1. **Decide: local Ollama, or a cloud provider?** With no `.env` (or the shipped defaults), every stage targets a local Ollama at `http://host.docker.internal:11434`. Ollama is **not** part of the compose stack: the default assumes one already running on the host with the required models pulled. If there is no host Ollama, the choice is a cloud provider, or the first ingest fails on an unreachable provider.
 2. **Copy the template:** `cp .env.example .env`. Edit `.env`, never `.env.example`.
 3. **For a cloud provider,** set the provider, model, and base URL for the embedding stage and all three inference stages, plus the API key. Changing a stage's provider without also setting its base URL misroutes that request to the local Ollama address. The shipped `.env.example` carries a ready-to-paste block; the channels and the model IDs that actually work are in [`references/providers.md`](references/providers.md).
-4. **Only then** run `docker compose up`.
+4. **Keep the key out of git.** This `.env` holds a real API key. If the directory is inside a git repository, that key is one `git add` away from being committed: run `git check-ignore .env`, and if it is not already ignored, add `.env` to a `.gitignore` before writing the key. Editing `.gitignore` or `.env` is sensitive, so the consent protocol in [`references/consent.md`](references/consent.md) applies.
+5. **Only then** run `docker compose up`.
 
 A cloud provider missing its key fails to boot the container, because Tribal validates provider config at startup. A cloud provider with an unsupported model boots but fails the first ingest, so confirm each model against [`references/providers.md`](references/providers.md) rather than uncommenting the example blind.
 
@@ -201,7 +202,7 @@ For HTTP or SSE, the Tribal server authenticates every request with a bearer tok
 
 Harnesses take the token one of two ways. Some store it inline in the config, as the `Authorization` header value. Others store the *name* of an environment variable to read at launch (Codex's `bearer_token_env_var` is this style), so the variable, not the config, carries the secret.
 
-**IMPORTANT (env-var style):** when a harness reads the token from a named environment variable, that variable must hold the token *and* be present in the shell at the moment the harness launches. Writing it to a shell rc file does not change an already-running shell or a running harness. The sequence is: set the variable, reload the shell (`source` the rc file), then restart the harness from that shell. The trap is silent: the config reads as correct, but calls fail to authenticate because the variable was empty when the harness started.
+**IMPORTANT (env-var style):** when a harness reads the token from a named environment variable, that variable must hold the token *and* be present in the shell at the moment the harness launches. Writing it to a shell rc file does not change an already-running shell or a running harness. The sequence is: set the variable, reload the shell (`source` the rc file, for example `source ~/.zshrc`; see [`references/platforms.md`](references/platforms.md) for the active shell), then restart the harness from that shell. The trap is silent: the config reads as correct, but calls fail to authenticate because the variable was empty when the harness started.
 
 ### Per-harness translations
 
