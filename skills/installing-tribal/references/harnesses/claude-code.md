@@ -14,7 +14,7 @@ Bootstrap's stderr output prints this directly:
 claude mcp add-json tribal "$(tribal mcp-config)"
 ```
 
-Claude Code accepts the canonical `tribal mcp-config` output as-is. No translation needed.
+Claude Code accepts the canonical `tribal mcp-config` output as-is. No translation needed. The loopback default snippet is URL-only and Claude Code authenticates over OAuth; the `--header` and manual-header forms below apply only when a static bearer is needed (`--static-token`, or a routable deployment).
 
 For the long-form `claude mcp add` variant (useful when the user wants to override specific fields):
 
