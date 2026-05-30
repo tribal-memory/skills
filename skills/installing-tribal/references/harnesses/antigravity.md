@@ -21,14 +21,17 @@ JSON at `mcp_config.json`. Common paths: project-root `mcp_config.json` for proj
 }
 ```
 
-For stdio: `command` + `args`, mirroring Gemini CLI's shape.
+Omit the `headers` block for the OAuth path; include it only for a static bearer. For stdio: `command` + `args`, mirroring Gemini CLI's shape.
 
 ## Translating from `tribal mcp-config`
 
-The canonical `url` field maps to Antigravity's `serverUrl` (not `url`, not `httpUrl`). The `headers` block carries through.
+The canonical `url` field maps to Antigravity's `serverUrl` (not `url`, not `httpUrl`); the `headers` block, when present, carries through.
 
 ```bash
-tribal mcp-config | jq '{serverUrl: .url, headers: .headers}'
+# OAuth (URL-only)
+tribal mcp-config | jq '{serverUrl: .url}'
+# static bearer
+tribal mcp-config --static-token | jq '{serverUrl: .url, headers: .headers}'
 ```
 
 Produces the per-server entry the agent merges under the existing `mcpServers` key.

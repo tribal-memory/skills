@@ -24,14 +24,20 @@ JSON (JSONC accepted) at `opencode.json` (project scope) or `~/.config/opencode/
 }
 ```
 
-`type: "remote"` is the HTTP form. `type: "local"` is the stdio form with `command` + `args`. Env-var interpolation uses `"{env:VAR_NAME}"` syntax.
+`type: "remote"` is the HTTP form. `type: "local"` is the stdio form, with `command` as a string array (for example `["tribal", "--config", "<path>", "serve", "--project", "<id>"]`) and an `environment` object (not `command`/`args`/`env`). Env-var interpolation uses `"{env:VAR_NAME}"` syntax. Omit the `headers` block for the DCR/OAuth path; include it only for a static bearer.
 
 ## Translating from `tribal mcp-config`
 
-The canonical `url` field maps directly. The `headers` block carries through; OpenCode's `{env:VAR}` interpolation can substitute the bearer token from an env var rather than hard-coding it.
+OpenCode performs DCR automatically (see Quirks), so the URL-only snippet needs no header:
 
 ```bash
-tribal mcp-config | jq '{type: "remote", url: .url, headers: .headers, enabled: true}'
+tribal mcp-config | jq '{type: "remote", url: .url, enabled: true}'
+```
+
+For a static bearer instead, add the header from `--static-token`; OpenCode's `{env:VAR}` interpolation can keep the token out of the file:
+
+```bash
+tribal mcp-config --static-token | jq '{type: "remote", url: .url, headers: .headers, enabled: true}'
 ```
 
 Produces the per-server entry the agent merges under the existing `mcp` key.
@@ -40,7 +46,6 @@ Produces the per-server entry the agent merges under the existing `mcp` key.
 
 ```bash
 opencode mcp list
-opencode mcp auth list
 opencode mcp debug tribal
 ```
 

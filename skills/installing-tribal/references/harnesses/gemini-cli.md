@@ -4,16 +4,22 @@ Primary documentation: [github.com/google-gemini/gemini-cli/blob/main/docs/tools
 
 ## Wire-up command (preferred)
 
-For HTTP (Streamable HTTP):
+For HTTP (Streamable HTTP). The URL-only snippet is enough when Gemini CLI completes Tribal's OAuth flow:
 
 ```bash
-snippet=$(tribal mcp-config)
+gemini mcp add --transport http tribal "$(tribal mcp-config | jq -r '.url')"
+```
+
+Otherwise embed a static bearer; `--static-token` populates the header:
+
+```bash
+snippet=$(tribal mcp-config --static-token)
 gemini mcp add --transport http tribal \
   "$(echo "$snippet" | jq -r '.url')" \
   --header "Authorization: $(echo "$snippet" | jq -r '.headers.Authorization')"
 ```
 
-The `snippet=$(tribal mcp-config)` line resolves the project against the database once and caches the JSON output in the shell; both `jq` reads then operate on the cached snippet rather than invoking the binary twice.
+Caching the snippet means both `jq` reads operate on it rather than invoking the binary twice.
 
 For stdio:
 
@@ -38,14 +44,17 @@ JSON at `~/.gemini/settings.json` (user scope) or `.gemini/settings.json` (proje
 }
 ```
 
-For stdio: `command`, `args`, `env`. For SSE specifically, use `url` instead of `httpUrl`.
+Omit the `headers` line for the OAuth path; include it only for a static bearer (`${TRIBAL_AUTH_TOKEN}` reads the token from the environment). For stdio: `command`, `args`, `env`. For SSE specifically, use `url` instead of `httpUrl`.
 
 ## Translating from `tribal mcp-config`
 
-The canonical `url` field maps to Gemini's `httpUrl` (not `url`) for Streamable HTTP. The `headers` block carries through directly.
+The canonical `url` field maps to Gemini's `httpUrl` (not `url`) for Streamable HTTP; the `headers` block, when present, carries through directly.
 
 ```bash
-tribal mcp-config | jq '{httpUrl: .url, headers: .headers}'
+# OAuth (URL-only)
+tribal mcp-config | jq '{httpUrl: .url}'
+# static bearer
+tribal mcp-config --static-token | jq '{httpUrl: .url, headers: .headers}'
 ```
 
 Produces the per-server entry the agent merges under the existing `mcpServers` key.
@@ -62,5 +71,5 @@ Inside a Gemini CLI session, `/mcp` lists active servers. Gemini CLI has no in-s
 
 - Gemini CLI strips env vars matching `*TOKEN*`, `*SECRET*`, `*PASSWORD*`, `*KEY*`, `*AUTH*`, `*CREDENTIAL*` from the base environment by default. To pass any such var to a Tribal stdio subprocess, name it explicitly in the `env` block.
 - Server names cannot contain underscores. Use `tribal`, not `tribal_mcp`.
-- Env-var expansion in the `env` block uses `$VAR` syntax.
+- Env-var expansion uses `$VAR` or `${VAR}` syntax, in the `env` block and `headers`.
 - If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.

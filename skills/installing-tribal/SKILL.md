@@ -164,13 +164,13 @@ tribal check --json
 
 ### On the Docker Compose path
 
-Run `tribal check` inside the container, and thread in the project id so the project-resolution check has context:
+Run `tribal check` inside the container:
 
 ```bash
-docker compose exec tribal sh -c 'TRIBAL_PROJECT_ID=$(cat /var/lib/tribal/tribal/project_id) tribal check'
+docker compose exec tribal tribal check
 ```
 
-Without the project id, the check reports a `project_resolution` warning even when the install is healthy.
+Without a project id in scope the check reports a `project_resolution` warning, which is harmless: the server serves the bootstrapped project regardless. To silence it (and scope ad-hoc container commands to the project), set `TRIBAL_PROJECT_ID` in `.env` to the bootstrapped project id and run `docker compose up -d` again; compose then passes it into the container for the healthcheck and every `docker compose exec`.
 
 ### When `tribal check` reports `ok: true` but something is still wrong
 
@@ -186,21 +186,21 @@ tribal mcp-config
 
 The command always emits JSON to stdout (no `--json` flag); warnings, if any, go to stderr. The shape (transport discriminator, stdio vs HTTP fields, where the bearer token lives) is documented in [`references/bootstrap-output.md`](references/bootstrap-output.md). The agent should run the command and inspect the live output rather than relying on a memorised shape.
 
-On the Docker Compose path, thread the project id in, the same as `tribal check`; without it, `tribal mcp-config` returns empty:
+On the Docker Compose path, run it inside the container:
 
 ```bash
-docker compose exec -T tribal sh -c 'TRIBAL_PROJECT_ID=$(cat /var/lib/tribal/tribal/project_id) tribal mcp-config'
+docker compose exec -T tribal tribal mcp-config
 ```
 
-When you only need to confirm the shape rather than wire it, note that the output carries the bearer token in its `Authorization` header; see [`references/consent.md`](references/consent.md) for inspecting it without printing the value to the transcript.
+The HTTP snippet carries no project (the server binds it), so nothing has to be threaded in. Docker is a loopback deployment, so its snippet is URL-only over OAuth; the authentication section below covers the static-token alternative. See [`references/consent.md`](references/consent.md) for handling a token without printing it to the transcript.
 
 **IMPORTANT:** the newly-wired server does not appear in the current session until the harness loads it; the Tribal MCP tools will be missing until then. Most harnesses need a session restart; some can reload in-session (Claude Code, via `/reload-plugins`). The per-harness reference notes which applies; tell the user as part of the handoff.
 
-### HTTP and SSE: the bearer token has to reach the harness
+### HTTP and SSE: authentication
 
-For HTTP or SSE, the Tribal server authenticates every request with a bearer token. Bootstrap mints that token (inside the container, on the Docker path) and `tribal mcp-config` surfaces it in the entry's `Authorization` header. Wiring the config is only half the job: the harness has to present that token on every call.
+For HTTP or SSE, how the harness authenticates turns on the deployment topology. On a loopback deployment (the default, including Docker), `tribal mcp-config` emits a URL-only snippet: the server advertises an OAuth flow with Dynamic Client Registration, so any DCR-capable harness, well-known or custom, registers and obtains a token on first connect, with nothing to copy.
 
-Harnesses take the token one of two ways. Some store it inline in the config, as the `Authorization` header value. Others store the *name* of an environment variable to read at launch (Codex's `bearer_token_env_var` is this style), so the variable, not the config, carries the secret.
+A harness that cannot perform that flow needs a static bearer: `tribal mcp-config --static-token` embeds the persisted token in the snippet's `Authorization` header (a routable deployment embeds it by default). The harness then presents it on every call, taking it either inline in the config or by the name of an environment variable read at launch (Codex's `bearer_token_env_var`).
 
 **IMPORTANT (env-var style):** when a harness reads the token from a named environment variable, that variable must hold the token *and* be present in the shell at the moment the harness launches. Writing it to a shell rc file does not change an already-running shell or a running harness. The sequence is: set the variable, reload the shell (`source` the rc file, for example `source ~/.zshrc`; see [`references/platforms.md`](references/platforms.md) for the active shell), then restart the harness from that shell. The trap is silent: the config reads as correct, but calls fail to authenticate because the variable was empty when the harness started.
 
@@ -218,7 +218,7 @@ The files in [`references/harnesses/`](references/harnesses/) cover the named ta
 
 Most harnesses support per-project and per-user scope for MCP server entries. The recommended default is project scope: a config file at the repository root rather than in the user's home directory. This keeps each repository's Tribal project ID bound to its own MCP entry, so switching repositories switches Tribal projects automatically. User scope is a valid choice when the user wants Tribal available in repositories that have not been bootstrapped, or when they prefer a single global configuration. The per-harness reference files name the scope flags or file paths.
 
-**IMPORTANT (HTTP and SSE transports):** the MCP entry for HTTP or SSE carries the bearer token in an `Authorization` header. Wiring that entry at project scope places the token in the harness's project-scoped config file, which is commonly tracked in version control. For HTTP or SSE, prefer a scope the harness keeps out of version control (user scope, or a local uncommitted file). Stdio entries carry no token and are unaffected.
+**IMPORTANT (entries that embed a static token):** an entry produced with `--static-token` (or on a routable deployment) carries the bearer in its config. At project scope that lands in a file commonly tracked in version control, so prefer a scope the harness keeps out of version control (user scope, or a local uncommitted file), or reference the token through an environment variable rather than inlining it. URL-only OAuth entries and stdio entries carry no token and are unaffected.
 
 ### Consent before writing
 

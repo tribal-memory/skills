@@ -12,6 +12,13 @@ codex mcp add tribal \
   --bearer-token-env-var TRIBAL_AUTH_TOKEN
 ```
 
+That wires a static bearer. For the loopback OAuth default, omit the bearer and authenticate over OAuth instead:
+
+```bash
+codex mcp add tribal --url "$(tribal mcp-config | jq -r '.url')"
+codex mcp login tribal
+```
+
 For stdio, pass the full Tribal invocation (command + args) after `--`. The canonical command and args come from `tribal mcp-config`:
 
 ```bash
@@ -77,4 +84,4 @@ Inside a Codex TUI session, `/mcp` lists active servers. Codex has no in-session
 ## Quirks
 
 - `bearer_token_env_var` stores the *name* of the env var, not the token itself. The variable must be in the shell's environment at the moment Codex launches. If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.
-- Top-level `mcp_oauth_callback_port` and `mcp_oauth_callback_url` keys override OAuth callback defaults; not relevant for Tribal's static bearer-token setup.
+- Top-level `mcp_oauth_callback_port` and `mcp_oauth_callback_url` keys override OAuth callback defaults; they apply only if Codex performs Tribal's OAuth flow rather than the static-bearer wiring above.
