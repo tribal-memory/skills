@@ -27,9 +27,9 @@ Set context once after the harness connects: model and provider must be set expl
 
 - **Feedback is a private local log.** It records observations into the user's own Postgres; nothing is transmitted anywhere. It rates the **session**, not individual items: item-level support and contradiction live in the `supports` and `contradicts` relations laid down at ingest time. Submit feedback when the signal is clear; session-end is a sensible default but not the only valid moment.
 
-## Composition with other MCP servers
+- **Reindex is an operator pathway, not part of the read or ingest loop.** The reindex tools are scope-gated (`tribal.embedding:execute`), single-flight, and have no status tool: progress is observed with `tribal check`, and the ingest job-status tool does not cover them. See [`reindexing.md`](./reindexing.md) for when and how.
 
-Tribal's read tools accept item IDs as inputs. That makes them composable with other MCP servers in the same session: another tool can produce candidate item IDs (for example, a SQL-aware MCP server querying Tribal's Postgres by some structural criterion), and `get` or `explore` continues the journey from there.
+- **Discover cursors are bound to the active embedding profile.** A `discover` response carries `next_cursor` and an `embedding_profile_id`. For the first page, omit the cursor; never pass an empty string (it is rejected as an invalid cursor, which some harnesses surface as a hard error). A reindex that completes mid-pagination changes the active profile and invalidates outstanding cursors, so re-query from the first page if that happens. The `exact` field is the completeness signal: `false` means the result was truncated to the limit (more matches exist), so paginate or raise the limit rather than treating the page as the whole answer.
 
 ## Phrasing
 

@@ -44,11 +44,25 @@ Tribal's ingest pipeline has retries and a dead-letter queue, and runs a reclaim
 
 Do not blindly re-submit ingests on failure. The retry path and reclaim sweep handle the recovery; manual re-submits create duplicates.
 
+### Reindex runs that stall or fail
+
+A reindex (changing the embedding model) is queued by `tribal reindex run` and driven by a live `tribal serve` worker; see [`reindexing.md`](./reindexing.md) for the full lifecycle. Three failure shapes:
+
+- **The run never progresses (stays queued).** No `tribal serve` worker is driving it. On a stdio install the only worker lives for the agent session, so a CLI-issued reindex with no server running sits queued. Start a `tribal serve` and the run resumes on its own (the database holds the state), or run the reindex while a server is up.
+- **The run is refused before it starts (`failed_precondition`).** The target embedding endpoint has no resolvable credential: no catalogue entry matches its normalised `(provider_kind, base_url)`, or the matching entry's key is empty. A path mismatch is a common cause (the credential's `base_url` carries `/v1` and the target does not, or vice versa). Fix the catalogue entry or the standard provider variable, keeping the `base_url` path-less and consistent.
+- **The run fails mid-rebuild.** Too many items could not be embedded (a persistent provider error, or more than the allowed quarantine share). The active profile is untouched. Resolve the provider issue, then `tribal reindex cancel` if the failed run is still marked live, and re-run.
+
+Reads and writes keep working against the existing embedding profile throughout all three; a reindex never takes the graph offline.
+
 ### The wired server fails to start after the database or project changed
 
 The harness stores the MCP server invocation produced at wiring time, project id included (`serve --project <id>`). A stdio server reads that invocation when the harness spawns it; an HTTP or SSE server is launched with it. If the targeted database or the resolved project id has since changed (a re-point to a different database, a project re-registered under a fresh id), the stored id no longer exists in the current database and the server refuses to start. Over MCP this tends to surface as a connection-level failure rather than a clean message (for example a `-32000`), which can read as Tribal being down when the cause is a stale wired id.
 
 Regenerate the invocation with `tribal mcp-config` (it reflects the currently-resolved project), re-wire the harness with the new snippet, then reload or restart so the harness respawns the server against it. A running stdio server does not pick up a config change on its own: reloading skills or plugins is not enough, because the server captured its arguments at spawn time. Whether the harness reloads in-session or needs a session restart is harness-specific; the installation flow covers the step for each.
+
+### `tribal check` or `serve` runs as stdio after you chose HTTP
+
+`bootstrap --transport http` only shapes the emitted MCP snippet; it does not persist `server.transport`. So a later `tribal check` or `tribal serve` with no transport set falls back to stdio, and `tribal check` may report a stdio transport, or "no advertised URL to probe", even though you bootstrapped for HTTP. This is configuration, not a fault: make the transport durable with `TRIBAL_SERVER__TRANSPORT=http` (or `server.transport: http` in the config), then re-run.
 
 ### Persistent transport errors
 
