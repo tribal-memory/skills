@@ -1,6 +1,6 @@
 ---
 name: installing-tribal
-description: Proactively use this skill when the user mentions installing, setting up, wiring, or configuring Tribal (a memory store for tacit engineering knowledge, the why, ways of working, breakthroughs). Also activates when `tribal check` reports failures the user wants to resolve, when switching transports, when re-wiring after a harness change, or when the user asks how to get started with Tribal. Walks through binary install, `tribal bootstrap`, `tribal check`, and MCP config wire-up.
+description: Proactively use this skill when the user mentions installing, setting up, wiring, or configuring Tribal (a memory store for tacit engineering knowledge, the why, ways of working, breakthroughs). Also activates when `tribal check` reports failures the user wants to resolve, when switching transports, when changing providers, models, or other configuration, when re-wiring after a harness change, or when the user asks how to get started with Tribal. Walks through binary install, `tribal bootstrap`, `tribal check`, and MCP config wire-up.
 license: CC-BY-4.0
 user-invocable: true
 allowed-tools: Bash(tribal *), Bash(brew *), Bash(curl *), Bash(docker *), Bash(npx skills *), Bash(jq *), Bash(uname *), Bash(claude mcp *), Bash(codex mcp *), Bash(gemini mcp *), Bash(opencode mcp *), Read, Write
@@ -72,7 +72,7 @@ docker compose up
 4. **For a cloud provider,** set the provider, model, and base URL for the embedding stage and all three inference stages, plus the API key. Changing a stage's provider without also setting its base URL misroutes that request to the local Ollama address. The shipped `.env.example` carries a ready-to-paste block; the channels and the model IDs that actually work are in [`references/providers.md`](references/providers.md).
 5. **Only then** run `docker compose up`.
 
-A cloud provider missing its key fails to boot the container, because Tribal validates provider config at startup. A cloud provider with an unsupported model boots but fails the first ingest, so confirm each model against [`references/providers.md`](references/providers.md) rather than uncommenting the example blind.
+A cloud inference provider missing its key fails container startup, because Tribal validates the inference providers' keys. A missing embedding credential is caught a step later: the container starts but its `tribal check` healthcheck reports the embedding credential unresolved. A cloud provider with an unsupported model boots but fails the first ingest, so confirm each model against [`references/providers.md`](references/providers.md) rather than uncommenting the example blind.
 
 By default this path registers a generic placeholder project (`tribal-docker-local`, with a placeholder remote), so ingests attach to that rather than the repository the user cares about. To bind Tribal to the real repo, either set `TRIBAL_PROJECT_NAME` and `TRIBAL_PROJECT_REMOTE` in `.env` before the first `docker compose up`, or, after wiring, have the agent run `tribal project register --remote <repo-url>`.
 
@@ -118,6 +118,14 @@ Bootstrap needs a Postgres database with the `pgvector` extension. The connectio
 
 A local Postgres URL looks like `postgresql://user:pass@localhost:5432/tribal`. The Docker Compose path provides a local Postgres out of the box.
 
+On a direct binary install you supply the database. To run one locally, use a Postgres with the `pgvector` extension available; a plain `postgres` image lacks the extension the first-run migration enables. For example:
+
+```bash
+docker run -d --name tribal-postgres -e POSTGRES_PASSWORD=tribal -p 5433:5432 pgvector/pgvector:pg17
+```
+
+Map a non-default host port (5433 above) to avoid colliding with an existing Postgres on 5432, and wait until it accepts connections (`pg_isready -h localhost -p 5433`) before running bootstrap, or the first-run migration races the database coming up. The URL is then `postgresql://postgres:tribal@localhost:5433/postgres`.
+
 Managed Postgres providers (Neon, Supabase, AWS RDS, and similar) usually require an `sslmode=require` parameter and may need provider-specific additions. The Neon shape, for instance, is `postgresql://<user>:<password>@<host>.neon.tech/<database>?sslmode=require`. The provider's dashboard or documentation is the canonical source for the exact URL.
 
 ### Transport choice
@@ -132,6 +140,8 @@ The `--transport` flag picks the connection shape between the harness and the Tr
 tribal bootstrap --transport http
 ```
 
+**IMPORTANT:** `--transport` only shapes the MCP snippet bootstrap emits; it does not persist `server.transport` to the config. For `tribal check` and `tribal serve` to use the same transport without re-passing the flag, make it durable: set `TRIBAL_SERVER__TRANSPORT` in the environment, or `server.transport` (and a non-default `server.bind_address`) in the config file. Without that, both fall back to stdio.
+
 ### HTTP and SSE: the server lifecycle is the user's
 
 For HTTP or SSE transports, the wire-up assumes a `tribal serve` process is running and bound to the registered project ID. Bootstrap's stderr output gives the exact `tribal serve` invocation to run; it does not start the server itself.
@@ -140,9 +150,13 @@ How that process runs is for the user to decide. Options include a separate term
 
 For the Docker Compose path, the container already runs `tribal serve` as its entrypoint. Nothing additional to manage.
 
+A running `tribal serve` reads its configuration once, at spawn. After upgrading the binary or editing the config for a server that is already running, restart that process for the change to take effect; reloading or reconnecting the harness does not restart a server the user owns.
+
 ### Choosing providers and models
 
 By default Tribal uses a local Ollama. To use a cloud provider, or a non-default local model, set the provider and model for the embedding stage and for each inference stage. `tribal bootstrap` accepts these as flags (`--embedding-provider`, `--embedding-model`, and `--inference-<stage>-provider` / `--inference-<stage>-model`); they can equally be set by environment variable or in the config file. The full set of channels, the per-install-path specifics (the Docker Compose path configures providers through `.env`, not the config file), and current model IDs live in [`references/providers.md`](references/providers.md).
+
+**IMPORTANT (cloud providers at bootstrap):** choosing a cloud *inference* provider with bootstrap flags requires that stage's API key to be reachable when bootstrap runs (in the environment, typically `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`); bootstrap validates the configuration and fails without it. The *embedding* key is checked a little later, at first serve or `tribal check`, so it can follow, but setting the key before bootstrap avoids the ordering trap.
 
 ### Re-running bootstrap
 
@@ -240,11 +254,17 @@ The remediation pattern is the same as for the core check suite: programmatic re
 
 ### Getting API keys to Tribal
 
-If the user has configured a cloud provider, the API key must reach the `tribal` process. The channels, and which applies to each install path, are in [`references/providers.md`](references/providers.md): a directly-installed binary reads it from the config file, a stage-specific `TRIBAL_..._API_KEY`, or the standard `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`; the Docker Compose path takes it from `.env`, since the config file inside the container does not drive provider routing. Writing a config or environment file is sensitive; the consent protocol in [`references/consent.md`](references/consent.md) applies.
+If the user has configured a cloud provider, the API key must reach the `tribal` process. The channels, and which applies to each install path, are in [`references/providers.md`](references/providers.md); the embedding key lives in the credentials catalogue and each inference key on its stage, but the simplest channel for either is the standard `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`, which covers every stage and the embedding endpoint that uses that provider. The Docker Compose path takes the key from `.env`, since the config file inside the container does not drive provider routing. Writing a config or environment file is sensitive; the consent protocol in [`references/consent.md`](references/consent.md) applies.
 
 For a one-time check without persistence, prepend the key: `OPENAI_API_KEY=<key> tribal check --providers`.
 
+Mind who runs the command. A key the user exports in their own interactive shell does not necessarily reach the agent's command shell; those are separate processes. When the agent is the one running `tribal`, route the key through a channel the agent's process inherits, a file it reads or the shell rc it loads at spawn, rather than relying on a value the user set elsewhere.
+
 When the key is supplied through the environment rather than a file Tribal reads on every invocation, the process that consumes it must be (re)started after the value is set: a harness-spawned stdio server needs the harness relaunched; an HTTP server or the Docker stack needs that process restarted. The agent cannot reload another process's environment for itself. The signal that a restart is needed is `tribal check --providers` failing on a provider auth check, not a direct inspection of the environment.
+
+## Changing the embedding model
+
+If the wrong embedding model or dimension was chosen, fixing it once the server has first started is a **reindex**, not a config edit: the first `tribal serve` boot provisions the embedding profile from `init.embedding`, and editing the seed afterwards has no effect. The procedure, including the `tribal serve` worker lifecycle that drives a reindex to completion and the `tribal.embedding:execute` scope it needs over HTTP, is in [`references/reindexing.md`](references/reindexing.md).
 
 ## What can go wrong here
 
@@ -273,6 +293,7 @@ The skill body is the entry point; the files below carry the depth.
 - [`references/platforms.md`](references/platforms.md): read early. Detection one-liner and what varies across macOS Intel, macOS Apple Silicon, and Linux.
 - [`references/bootstrap-output.md`](references/bootstrap-output.md): read when parsing `tribal bootstrap --json` or `tribal mcp-config` output.
 - [`references/providers.md`](references/providers.md): read when selecting or configuring embedding or inference providers and models, including cloud-provider setup and current model IDs.
+- [`references/reindexing.md`](references/reindexing.md): read when changing the embedding model, dimension, provider, or endpoint after setup (a reindex).
 - [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md): read when handling `tribal check` failures, including from `--providers`.
 - [`references/harnesses/`](references/harnesses/): read when wiring Tribal into a specific harness. Each file under the directory covers one harness.
 - [`references/failure-modes.md`](references/failure-modes.md): read when something fails outside the check suite (worker death, transport errors, VPN blocking the database, prompt I/O).

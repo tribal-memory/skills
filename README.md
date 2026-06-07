@@ -19,8 +19,8 @@ The [skills CLI](https://github.com/vercel-labs/skills) wires the skills into yo
 
 | Skill | When it activates | What it teaches |
 |---|---|---|
-| [`installing-tribal`](./skills/installing-tribal/SKILL.md) | First setup, switching transports, re-wiring after a harness change | Binary install paths, `tribal bootstrap`, `tribal check`, MCP config wire-up |
-| [`using-tribal`](./skills/using-tribal/SKILL.md) | Day-to-day ingest, query, traverse, diagnose | What Tribal is for, how ingests are phrased, discover and explore patterns, the diagnostic primitive |
+| [`installing-tribal`](./skills/installing-tribal/SKILL.md) | First setup, switching transports, config changes, re-wiring after a harness change | Binary install paths, `tribal bootstrap`, `tribal check`, MCP config wire-up |
+| [`using-tribal`](./skills/using-tribal/SKILL.md) | Day-to-day ingest, query, traverse, diagnose, or changing the embedding model | What Tribal is for, how ingests are phrased, discover and explore patterns, the diagnostic primitive, changing the embedding model |
 
 Per-harness wire-up references cover Claude Code, Codex, Gemini CLI, Antigravity, and OpenCode. Other harnesses supported by the skills CLI consume Tribal's canonical `tribal mcp-config` output directly.
 
@@ -30,13 +30,13 @@ Per-harness wire-up references cover Claude Code, Codex, Gemini CLI, Antigravity
 skills/
 ├── installing-tribal/
 │   ├── SKILL.md
-│   └── references/   # bootstrap-output, consent, failure-modes, harnesses/, platforms, providers, tribal-check-remediation
+│   └── references/   # bootstrap-output, consent, failure-modes, harnesses/, platforms, providers, reindexing, tribal-check-remediation
 └── using-tribal/
     ├── SKILL.md
-    └── references/   # bootstrap-output, failure-modes, mcp-tools, tacit-knowledge, tribal-check-remediation
+    └── references/   # bootstrap-output, failure-modes, mcp-tools, reindexing, tacit-knowledge, tribal-check-remediation
 ```
 
-Each skill is self-contained: its references live inside its own directory, so they travel with `npx skills add` (a skill installs its directory, not the whole repo). The skill bodies are the entry points; the reference files carry the depth and are loaded on demand. `tribal-check-remediation`, `failure-modes`, and `bootstrap-output` appear in both skills by design, since each must stand alone; a CI check keeps the shared copies in sync.
+Each skill is self-contained: its references live inside its own directory, so they travel with `npx skills add` (a skill installs its directory, not the whole repo). The skill bodies are the entry points; the reference files carry the depth and are loaded on demand. `tribal-check-remediation`, `failure-modes`, `bootstrap-output`, and `reindexing` appear in both skills by design, since each must stand alone; a CI check keeps the shared copies in sync.
 
 ## About Tribal
 
@@ -54,6 +54,6 @@ Contributions are welcome for:
 
 Open a pull request; the structure and editorial conventions live in the existing files.
 
-## License
+## Licence
 
 [CC-BY-4.0](./LICENSE). Use, modify, and redistribute with attribution.
