@@ -9,11 +9,11 @@ Antigravity defines MCP servers in a standalone `mcp_config.json` (not nested in
 
 ## stdio (the supported path)
 
-Stdio works out of the box: Antigravity spawns Tribal as a subprocess, authenticated as `principal:local` at runtime, so there is no URL, token, or header to manage. Take the `command` and `args` from the stdio `tribal mcp-config` output and place them under `mcpServers.tribal` in one of the files above (the `command` + `args` shape follows Gemini CLI's config lineage).
+Stdio works out of the box: Antigravity spawns Tribal as a subprocess, authenticated as `principal:local` at runtime, so there is no URL, token, or header to manage. Take the `command` and `args` from the stdio `tribal mcp-config` output and place them under `mcpServers.tribal` in one of the files above.
 
 ## HTTP and SSE
 
-Not documented here. Antigravity's remote-MCP auth is its own scheme (a static token via `env`, with no OAuth flow) and is not verified against Tribal's bearer expectation, so consult Antigravity's MCP documentation for the current remote shape (it uses `serverUrl`, not `url` or `httpUrl`). Use `tribal mcp-config` output as the reference for the URL and token, and let the agent help debug the wire-up against it.
+Antigravity's remote-MCP auth uses a static token, not OAuth, so the loopback default (URL-only) is not enough on its own. Take the URL and bearer from `tribal mcp-config --static-token`. Antigravity's remote config shape is its own (it uses `serverUrl`, not `url` or `httpUrl`) and is not verified against Tribal here, so consult Antigravity's MCP documentation for the current shape and map the URL and token onto it.
 
 ## Verification
 

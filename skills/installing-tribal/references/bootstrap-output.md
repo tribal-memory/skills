@@ -1,6 +1,6 @@
 # CLI JSON outputs for binary integration
 
-Reference for the two structured outputs the agent consumes during install and wire-up: `tribal bootstrap --json` and `tribal mcp-config`. Both shapes are stable across releases. To see the current shape, run the command and inspect the output; the field reference below describes what each field contains semantically.
+Reference for the two structured outputs the agent consumes during install and wire-up: `tribal bootstrap --json` and `tribal mcp-config`. To see the current shape, run the command and inspect the output; the field reference below describes what each field contains semantically.
 
 ## `tribal bootstrap --json`
 
@@ -29,13 +29,9 @@ The shape depends on the `type` discriminator:
 
 The stdio and network shapes are disjoint: no field is shared beyond `type`.
 
+`--static-token` embeds the persisted bearer (the one bootstrap wrote to the credentials file), so it needs a prior successful bootstrap; `--token <value>` embeds a token you supply instead, and the two are mutually exclusive. `mcp-config` does not validate the configuration, so it still works after the cloud API key has left the shell.
+
 ## jq snippets
-
-Extract the bearer token from a bootstrap run (works on every transport and topology):
-
-```bash
-tribal bootstrap --json | jq -r '.bearer_token'
-```
 
 Extract the MCP snippet alone:
 
@@ -49,8 +45,4 @@ Extract the URL from an HTTP/SSE snippet:
 tribal mcp-config | jq -r '.url'
 ```
 
-Extract the Authorization header value. The loopback snippet is URL-only, so embed a token first (`--static-token`, or `--token <value>`):
-
-```bash
-tribal mcp-config --static-token | jq -r '.headers.Authorization'
-```
+The bearer token lives at `.bearer_token` (bootstrap) or `.headers.Authorization` (an `mcp-config --static-token` snippet), but both are secrets: feed them into the wire-up by command substitution rather than printing them to the transcript. The `tribal mcp-config --static-token` form is the cleanest way to embed the token, since it never passes through a bare print.

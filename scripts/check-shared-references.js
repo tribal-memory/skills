@@ -15,6 +15,7 @@ const SHARED_REFERENCES = {
   "bootstrap-output.md": ["installing-tribal", "using-tribal"],
   "tribal-check-remediation.md": ["installing-tribal", "using-tribal"],
   "failure-modes.md": ["installing-tribal", "using-tribal"],
+  "reindexing.md": ["installing-tribal", "using-tribal"],
 };
 
 function read(skill, reference) {

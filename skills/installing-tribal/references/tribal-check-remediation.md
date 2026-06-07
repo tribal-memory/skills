@@ -21,9 +21,9 @@ For each diagnostic request:
 
 1. Run `tribal check --json`. Add `--providers` if the user is preparing for their first ingest.
 2. For each check with status `warn` or `fail`, read the `remediation`. Then:
-   - **If the remediation is programmatic and does not touch sensitive state** (running a script, restarting a service, installing a missing package, creating a database, applying a migration), perform it autonomously. Tell the user what you did after the fact.
+   - **If the remediation is programmatic and does not touch sensitive state** (running a script, restarting a service, installing a missing package, creating a database, applying a migration, cancelling a stuck reindex run), perform it autonomously. Tell the user what you did after the fact.
    - **If the remediation touches sensitive state** (adding API keys to the environment, editing shell rc files, writing credentials), surface the remediation verbatim and let the user proceed. Do not paraphrase. Do not invent steps. Do not summarise.
-3. After applying or relaying a fix, re-run `tribal check --json` and confirm the previously-failed check now reports `pass`.
+3. After applying or relaying a fix, re-run `tribal check --json` and confirm the previously-flagged check is resolved. Some checks can sit at `warn` as an expected state (for example, while an embedding reindex is in progress); a `warn` whose remediation is purely informational does not need to be forced to `pass`.
 
 The principle: take the work off the user's hands wherever the action is safe to automate; hand off only when secrets or persistent state are in play.
 

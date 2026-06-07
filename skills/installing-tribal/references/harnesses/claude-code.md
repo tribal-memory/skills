@@ -14,7 +14,13 @@ Bootstrap's stderr output prints this directly:
 claude mcp add-json tribal "$(tribal mcp-config)"
 ```
 
-Claude Code accepts the canonical `tribal mcp-config` output as-is. No translation needed. The loopback default snippet is URL-only and Claude Code authenticates over OAuth; the `--header` and manual-header forms below apply only when a static bearer is needed (`--static-token`, or a routable deployment).
+Claude Code accepts the canonical `tribal mcp-config` output as-is. No translation needed. The loopback default snippet is URL-only and Claude Code authenticates over OAuth.
+
+For a static bearer instead (a deployment where OAuth is not used), wire the token-bearing snippet the same way:
+
+```bash
+claude mcp add-json tribal "$(tribal mcp-config --static-token)"
+```
 
 For the long-form `claude mcp add` variant (useful when the user wants to override specific fields):
 
@@ -77,4 +83,4 @@ Inside a Claude Code session, `/mcp` opens the runtime status panel, and `/reloa
 - `${VAR}` and `${VAR:-default}` env-var expansion works in `command`, `args`, `env`, `url`, `headers`.
 - Server name `workspace` is reserved; do not use it.
 - `CLAUDE_PROJECT_DIR` is injected into the spawned stdio process automatically.
-- If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.
+- If Tribal's MCP tools fail to authenticate from within Claude Code, it was launched before the bearer-token env var was set: ask the user to quit, set it, and relaunch. The variable must be present at launch. Do not probe the environment directly.

@@ -1,6 +1,6 @@
 ---
 name: using-tribal
-description: Proactively use this skill whenever the user signals (explicitly or implicitly) that they want to save an insight, breakthrough, recurring decision, or hard-won lesson for later. Also activates when the user asks a question whose answer might already live in Tribal ("what did we decide about", "have we hit this before", "is there prior art for"), shares a moment of realisation ("oh, I get it now", "that's the same shape as"), or starts a task where prior tacit knowledge might be relevant. Captures and queries tacit engineering knowledge, the why, ways of working, breakthroughs from debugging. Not for line numbers, function specs, or other dry facts that rot.
+description: Proactively use this skill whenever the user signals (explicitly or implicitly) that they want to save an insight, breakthrough, recurring decision, or hard-won lesson for later. Also activates when the user asks a question whose answer might already live in Tribal ("what did we decide about", "have we hit this before", "is there prior art for"), shares a moment of realisation ("oh, I get it now", "that's the same shape as"), starts a task where prior tacit knowledge might be relevant, or wants to change the embedding model or otherwise administer their Tribal instance. Captures and queries tacit engineering knowledge (the why, ways of working, breakthroughs from debugging), and handles instance upkeep such as changing the embedding model. Not for line numbers, function specs, or other dry facts that rot.
 license: CC-BY-4.0
 user-invocable: true
 allowed-tools: Bash(tribal *), Bash(jq *)
@@ -59,13 +59,14 @@ Tribal exposes its operations through the MCP tool protocol. **The canonical sou
 
 The categories, abstractly:
 
-- **Set the session context** once at activation: project, optionally model preference. Applies to subsequent calls.
+- **Set the session context** once at activation: project, optionally model and provider preference. Applies to subsequent calls.
 - **Ingest** asynchronously when a trigger fires. Returns a job ID; work happens in a background pipeline.
-- **Poll job status** until ingest completes or fails. Useful when the user needs confirmation.
+- **Poll job status** until ingest completes or fails; it covers ingest jobs only. Useful when the user needs confirmation.
 - **Discover** by semantic similarity when answering questions or starting tasks.
 - **Explore** the relation graph from a known item to surface related context the user did not directly ask for.
 - **Get** by ID for full content of a specific item.
 - **Feedback** records the user's observations about retrieval quality to a private local log in the user's own Postgres. It does not influence what future `discover` calls return.
+- **Reindex operations** (operator-only): migrate the corpus to a new embedding model, dimension, provider, or endpoint. Gated on the `tribal.embedding:execute` scope and not visible to an ordinary agent. See "Changing the embedding model" below.
 
 For usage nuance (when to compose these, output interpretation patterns, workflow heuristics), see [`references/mcp-tools.md`](references/mcp-tools.md). For canonical tool definitions, look at how your harness surfaces each tool; the schemas come directly from Tribal's MCP `tools/list` response at activation.
 
@@ -85,6 +86,10 @@ Composition pattern: `discover` (semantic search over the graph), then `explore`
 
 For output interpretation (item IDs, standing values, reference shapes, traversal direction), see [`references/mcp-tools.md`](references/mcp-tools.md).
 
+## Changing the embedding model
+
+When the user wants to switch embedding model (or change its dimension, provider, or endpoint), that is a **reindex**, not a config edit: editing `init.embedding` after the server's first start does nothing, and a model change re-embeds the whole corpus. It is an operator action gated on the `tribal.embedding:execute` scope, so ordinary agents may not even see the reindex tools. The full procedure, the dry-run estimate, the `tribal serve` worker lifecycle that drives a reindex to completion, and how to observe it, are in [`references/reindexing.md`](references/reindexing.md).
+
 ## The diagnostic primitive
 
 When something looks wrong, the first action is `tribal check --json`. It is the binary's introspection surface and the canonical run-book: every condition the binary can detect classifies itself, and each `warn` or `fail` carries a `remediation` field with the exact next step.
@@ -94,6 +99,8 @@ When something looks wrong, the first action is `tribal check --json`. It is the
 Agent autonomy applies. Where the remediation is programmatic and touches no sensitive state (running a script, restarting a service, installing a package, applying a migration), perform it without waiting for the user. Hand off to the user when the remediation touches API keys in the environment, credentials files, or shell rc files. Re-run `tribal check --json` after each fix; the check ordering is intentional, and a fix often unblocks downstream checks that were previously skipped.
 
 If `tribal check --json` reports `ok: true` and the user still sees a problem, the issue lives outside the surface the binary can introspect. See the next section.
+
+To inspect the resolved configuration (the configured provider, model, transport, and paths, with secrets redacted), run `tribal config show`; it is read-only and a useful first look when a setting is not taking effect. The live active embedding profile, which can differ from the configured seed after a reindex, shows in `tribal check`.
 
 For the walkthrough pattern in full (envelope shape, autonomy rules, iteration), see [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md).
 
@@ -111,7 +118,7 @@ The feedback tool records observations about retrieval quality into the local Po
 
 Call it for two reasons:
 
-- **Self-reflection.** After a `discover` or `explore` session, log which items helped and which were off-topic. Over time the log becomes a record of how the graph is serving the user across sessions.
+- **Self-reflection.** After a `discover` or `explore` session, record whether the results were useful; the rating is for the session, not individual items. Over time the log becomes a record of how the graph is serving the user across sessions.
 - **Evidence for issues.** When filing a GitHub issue about retrieval behaviour, the logged entries are concrete examples to attach.
 
 The Tribal engine does not consume the feedback log; calling the tool will not change what `discover` returns next time. Be explicit with the user about this. The name "feedback" can lead them to expect retrieval will improve in response, which it will not.
@@ -122,5 +129,6 @@ For the canonical signature, look at how your harness surfaces the feedback tool
 
 - [`references/tacit-knowledge.md`](references/tacit-knowledge.md): read before calling the ingest tool for the first time in a session. Canonical guide to phrasing ingests (four-component pattern, worked transformations, audience rules).
 - [`references/mcp-tools.md`](references/mcp-tools.md): read for usage nuance, workflow composition, and output interpretation patterns. Tool definitions remain canonical against `List Tools`.
+- [`references/reindexing.md`](references/reindexing.md): read when the user wants to change the embedding model, dimension, provider, or endpoint (a reindex).
 - [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md): read when running `tribal check --json` and walking the user through remediation.
 - [`references/failure-modes.md`](references/failure-modes.md): read when the user reports a problem and `tribal check` reports `ok: true`.
