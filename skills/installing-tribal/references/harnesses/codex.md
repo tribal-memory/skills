@@ -4,7 +4,7 @@ Primary documentation: [developers.openai.com/codex/mcp](https://developers.open
 
 ## Wire-up command (preferred)
 
-For HTTP (Streamable HTTP):
+For HTTP (Streamable HTTP), wire a static bearer token (Codex's OAuth login is not the wire-up path for Tribal):
 
 ```bash
 codex mcp add tribal \
@@ -12,26 +12,11 @@ codex mcp add tribal \
   --bearer-token-env-var TRIBAL_AUTH_TOKEN
 ```
 
-That wires a static bearer. For the loopback OAuth default, omit the bearer and authenticate over OAuth instead:
+Export the token to `TRIBAL_AUTH_TOKEN` before launching Codex; retrieve it with `tribal mcp-config --static-token` or from the bootstrap output. See the Quirks note on env-var timing.
+
+For stdio, pass the full Tribal invocation (command + args) after `--`. Read the `command` and `args` from `tribal mcp-config`, then:
 
 ```bash
-codex mcp add tribal --url "$(tribal mcp-config | jq -r '.url')"
-codex mcp login tribal
-```
-
-For stdio, pass the full Tribal invocation (command + args) after `--`. The canonical command and args come from `tribal mcp-config`:
-
-```bash
-# Inspect what the stdio invocation should look like
-tribal mcp-config
-# Example output (paths and IDs vary):
-# {
-#   "type": "stdio",
-#   "command": "tribal",
-#   "args": ["--config", "<config-path>", "serve", "--project", "<project-id>"]
-# }
-
-# Then pass that command and args to codex:
 codex mcp add tribal -- tribal --config <config-path> serve --project <project-id>
 ```
 
@@ -83,5 +68,4 @@ Inside a Codex TUI session, `/mcp` lists active servers. Codex has no in-session
 
 ## Quirks
 
-- `bearer_token_env_var` stores the *name* of the env var, not the token itself. The variable must be in the shell's environment at the moment Codex launches. If `tribal check --providers` flags an env-var auth issue, the harness was launched before the variable came into scope: ask the user to quit, set the variable, and relaunch. Let the check failure be the signal; do not probe the environment directly.
-- Top-level `mcp_oauth_callback_port` and `mcp_oauth_callback_url` keys override OAuth callback defaults; they apply only if Codex performs Tribal's OAuth flow rather than the static-bearer wiring above.
+- `bearer_token_env_var` stores the *name* of the env var, not the token itself. The variable must be in Codex's environment at launch. If Tribal's MCP tools fail to authenticate from within Codex, it was launched before that variable was set: ask the user to quit, set it, and relaunch. Do not probe the environment directly.
