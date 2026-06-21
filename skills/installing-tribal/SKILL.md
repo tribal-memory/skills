@@ -12,6 +12,8 @@ allowed-tools: Bash(tribal *), Bash(brew *), Bash(curl *), Bash(docker *), Bash(
 
 This skill walks through the five steps that configure Tribal: install the binary, run `tribal bootstrap`, run `tribal check`, wire the MCP config into your harness, and verify provider readiness. The first ingest fails until that last step passes, so it is part of setup, not an optional extra. Follow the steps in order.
 
+Two decisions along the way are the user's to make, because the consequences land on them: the install path (Step 1) and the ingestion execution mode, one-shot or agentic (Step 2).
+
 If `using-tribal` should activate after configuration is complete, this skill hands off at the end.
 
 ## Before you start
@@ -158,6 +160,10 @@ By default Tribal uses a local Ollama. To use a cloud provider, or a non-default
 
 **IMPORTANT (cloud providers at bootstrap):** choosing a cloud *inference* provider with bootstrap flags requires that stage's API key to be reachable when bootstrap runs (in the environment, typically `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`); bootstrap validates the configuration and fails without it. The *embedding* key is checked a little later, at first serve or `tribal check`, so it can follow, but setting the key before bootstrap avoids the ordering trap.
 
+### Execution mode: one-shot or agentic
+
+Each ingestion stage runs one-shot by default: a single model call commits its result. A stage can instead run an agentic loop that investigates and verifies before committing, at higher token and time cost and needing a tool-capable model. Because the loop runs only when chosen, name both modes and the trade-off to the user and confirm the choice before the first ingest rather than defaulting silently. Set it per stage in the `agents` section (the config file, or an environment variable; there is no bootstrap flag), where an unset stage stays one-shot; [`references/agentic-ingestion.md`](references/agentic-ingestion.md) carries the per-stage executor, its verifier, and the budgets.
+
 ### Re-running bootstrap
 
 Re-running `tribal bootstrap` against the same git repository is safe. It reuses the existing project, mints a fresh bearer token, and re-emits the MCP config. Useful when the user wants new credentials, a different transport, or a clean MCP config snippet.
@@ -293,6 +299,7 @@ The skill body is the entry point; the files below carry the depth.
 - [`references/platforms.md`](references/platforms.md): read early. Detection one-liner and what varies across macOS Intel, macOS Apple Silicon, and Linux.
 - [`references/bootstrap-output.md`](references/bootstrap-output.md): read when parsing `tribal bootstrap --json` or `tribal mcp-config` output.
 - [`references/providers.md`](references/providers.md): read when selecting or configuring embedding or inference providers and models, including cloud-provider setup and current model IDs.
+- [`references/agentic-ingestion.md`](references/agentic-ingestion.md): read when configuring the per-stage executor, its verifier, and budgets.
 - [`references/reindexing.md`](references/reindexing.md): read when changing the embedding model, dimension, provider, or endpoint after setup (a reindex).
 - [`references/tribal-check-remediation.md`](references/tribal-check-remediation.md): read when handling `tribal check` failures, including from `--providers`.
 - [`references/harnesses/`](references/harnesses/): read when wiring Tribal into a specific harness. Each file under the directory covers one harness.

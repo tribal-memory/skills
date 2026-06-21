@@ -38,7 +38,7 @@ At runtime, an environment variable wins over the config file. The bootstrap pro
 
 `base_url` is optional; unset, each provider uses its own default endpoint (a local Ollama, or the provider's public API). Set it to reach a non-default endpoint, such as a remote Ollama or a gateway.
 
-**IMPORTANT:** switching a stage from the local default to a cloud provider means setting that stage's `base_url` to the cloud endpoint as well. If the provider changes but the base URL still points at the local address, requests misroute.
+**IMPORTANT:** an unset `base_url` follows the provider, so switching a stage to a cloud provider is enough on a binary install. Where `base_url` is pinned to a local address, as the Docker Compose stack does, change it to the cloud endpoint too; left pointing at the local address, requests misroute.
 
 **IMPORTANT (embedding endpoints):** for an OpenAI-style endpoint, use a **path-less** base URL: `https://api.openai.com`, not `https://api.openai.com/v1`. Tribal normalises an endpoint by keeping its path (the `:443` port is filled in for you), then matches the embedding seed's `base_url` against the credential's `base_url`. If one carries `/v1` and the other does not, they do not match, the credential does not resolve, and embedding fails closed with no obvious cause. Keep the seed's and the credential's `base_url` in the same, path-less form.
 
