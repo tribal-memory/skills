@@ -39,10 +39,14 @@ If Tribal cannot determine the project's origin from the current working directo
 
 Tribal's ingest pipeline has retries and a dead-letter queue, and runs a reclaim sweep at startup. The job-status tool surfaces the current state.
 
-- **Failed jobs** carry error context in the response. Surface it to the user. The most common cause is a provider configuration issue (provider unreachable, model misconfigured) that `tribal check --providers` would also flag.
-- **Stuck jobs** show as not progressing across several status checks over a meaningful interval. Restart Tribal (see above); the reclaim sweep at the next startup picks up stuck rows.
+- **Failed jobs** show `status: failed`. The response carries status, outcome, and task counts only; the failure's error text lives in the logs and the database, not the response. The most common cause is a provider configuration issue (provider unreachable, model misconfigured) that `tribal check --providers` would also flag.
+- **Stuck jobs** show as not progressing across several status checks over a meaningful interval (a loop stage runs longer than a single call, so allow a longer interval before judging a job stuck). Restart Tribal (see above); the reclaim sweep at the next startup picks up stuck rows.
 
 Do not blindly re-submit ingests on failure. The retry path and reclaim sweep handle the recovery; manual re-submits create duplicates.
+
+### An agentic loop stage fails on a model that cannot use tools
+
+A loop stage drives the model through tool calls; a one-shot stage does not. If the configured model cannot use tools, that stage fails rather than degrading. An extraction or relation failure fails the job (`status: failed`); a triage failure is non-fatal (the job stays live, `tasks_failed` rises). The error text lives in the logs and the database, not the job-status response. Do not pre-check the model: the failing stage is the signal. Point that stage at a tool-capable model, or back to one-shot; the installing-tribal skill covers the config.
 
 ### Reindex runs that stall or fail
 
@@ -82,7 +86,7 @@ Some harnesses run shell commands in a sandbox (Codex, for example). Under one, 
 
 Tribal supports two modes for loading prompt templates. The default is **embedded**: prompts ship inside the binary and load from memory. The opt-in is **on-disk**, configured via the YAML config; Tribal then reads the prompts from a user-specified directory. `tribal config show` displays the resolved mode and path.
 
-If the user has chosen on-disk and the loader fails (the directory is missing, the files are unreadable, the watcher fails), Tribal falls back to the embedded defaults silently. The symptom is that the user's custom prompts stop taking effect, not a hard error. The agent cannot detect this from a tool call. If a user reports it, run `tribal config show` to confirm the mode and path, then verify the directory's contents and permissions with them.
+If the user has chosen on-disk, three shapes follow from the loader. A missing directory or file auto-heals: Tribal writes the embedded defaults to disk on the next startup, then loads them. An unreadable file at startup is a hard boot failure, not a silent fallback. A failed hot-reload is logged and keeps the previously loaded version. If a user reports custom prompts not taking effect, run `tribal config show` to confirm the mode and path, then verify the directory's contents and permissions with them.
 
 ## When nothing matches
 

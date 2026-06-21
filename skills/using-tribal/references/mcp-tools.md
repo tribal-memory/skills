@@ -19,7 +19,7 @@ Set context once after the harness connects: model and provider must be set expl
 
 - **Project filter has three modes.** Omit it to use the session-context project. Pass an ID to scope to that project. **Pass null to search across every project.** The null mode is often the most valuable as the graph matures: relationships between work in different projects only surface when the filter is off.
 
-- **Ingest is fire-and-forget by default.** The call returns a `job_id` immediately; the pipeline (extract, triage, relate) runs in the background. Poll job status only when the user explicitly wants confirmation or a downstream operation depends on the item being committed. The status tool supports a blocking mode (capped at 30 seconds) that folds ingest plus poll into a single round-trip for short ingests.
+- **Ingest is eventually consistent.** The call returns a `job_id` immediately; the pipeline (extract, triage, relate) runs in the background. Carry on rather than polling; reach for job status only when a next step needs the item committed first. To block on that one follow-up, set `wait_seconds` (capped at 30) on the status call: it waits for the job to finish or the timeout to expire. Under the agentic loop executor (see `installing-tribal`) a stage investigates and verifies, so it runs longer and a `wait_seconds` call often returns before it finishes, which is expected.
 
 - **Get expands ID references on items.** Standing fields carry IDs (`newest_supporting_id`, `newest_contradicting_id`) without inlining the full content. When the agent wants to see what one of those references actually says, fetch by ID. The same applies to any ID surfaced in a response or carried across sessions.
 

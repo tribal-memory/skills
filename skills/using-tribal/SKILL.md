@@ -32,6 +32,10 @@ When the user asks for an ingest, the job is to enrich the candidate with availa
 
 **Mandatory pre-read:** load [`references/tacit-knowledge.md`](references/tacit-knowledge.md) before calling the ingest tool for the first time in a session. It is the canonical guide: the four-component pattern in full, worked transformations, the audience rules, the enrichment pattern, and the starter prompts.
 
+## How ingestion runs
+
+Ingestion runs server-side under one of two executors: one-shot (the default), or an agentic loop that investigates before it commits. Which one runs is a deployment choice set in the server's configuration, not a tool one: the tool surface, the call shape, and how the agent phrases an ingest are all the same, and the agent does not pick the executor per call. Under the loop an ingest investigates more and runs longer. The `installing-tribal` skill configures it and documents the two executors.
+
 ## Triggers
 
 Explicit triggers (the user names the action):
@@ -61,7 +65,7 @@ The categories, abstractly:
 
 - **Set the session context** once at activation: project, optionally model and provider preference. Applies to subsequent calls.
 - **Ingest** asynchronously when a trigger fires. Returns a job ID; work happens in a background pipeline.
-- **Poll job status** until ingest completes or fails; it covers ingest jobs only. Useful when the user needs confirmation.
+- **Poll job status** only when a next step needs the item committed first, or the user wants confirmation; otherwise carry on and let the pipeline finish. It covers ingest jobs only.
 - **Discover** by semantic similarity when answering questions or starting tasks.
 - **Explore** the relation graph from a known item to surface related context the user did not directly ask for.
 - **Get** by ID for full content of a specific item.
